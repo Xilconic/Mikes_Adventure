@@ -131,7 +131,8 @@ public class PlayerController : MonoBehaviour
             }
             else
             {
-                if (_normalizedMovementInput.y < CrouchInputZone)
+                if (_normalizedMovementInput.y < CrouchInputZone ||
+                    (PlayerState == State.Crouching && _touchingDirections.IsOnCeiling))
                 {
                     PlayerState = State.Crouching;
                     // Have a stable dead-zone for crouching to allow for standing still while crouched:
