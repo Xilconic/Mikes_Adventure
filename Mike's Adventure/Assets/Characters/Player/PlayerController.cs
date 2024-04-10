@@ -40,6 +40,12 @@ public class PlayerController : MonoBehaviour
     [Tooltip("Determines the jump strength")]
     public float JumpImpulse = 10f;
 
+    [Tooltip("Jumping gravity scale")]
+    public float JumpingGravityScale = 1f;
+
+    [Tooltip("Falling gravity scale")]
+    public float FallingGravityScale = 2f;
+
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
@@ -49,6 +55,8 @@ public class PlayerController : MonoBehaviour
         Debug.Assert(MaxWalkSpeed > 0, "'MaxWalkSpeed' must be greater than 0!");
         Debug.Assert(MaxWalkSpeed <= MaxRunSpeed, "'MaxWalkSpeed' must be less than or equal to 'MaxRunSpeed'!");
         Debug.Assert(JumpImpulse > 0, "'JumpImpulse' must be greater than 0!");
+        Debug.Assert(JumpingGravityScale > 0, "'JumpingGravityScale' must be greater than 0!");
+        Debug.Assert(FallingGravityScale > 0, "'FallingGravityScale' must be greater than 0!");
     }
 
     private void Start()
@@ -82,8 +90,9 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            if (_rb.velocity.y < 0)
+            if (!IsRisingInAir)
             {
+                _rb.gravityScale = FallingGravityScale;
                 ChangeAnimationState(AnimationClipNames.Falling);
             }
         }
@@ -109,6 +118,7 @@ public class PlayerController : MonoBehaviour
             _touchingDirections.IsGrounded)
         {
             ChangeAnimationState(AnimationClipNames.Jump);
+            _rb.gravityScale = JumpingGravityScale;
             _rb.velocity = new Vector2(_rb.velocity.x, JumpImpulse);
         }
         // Allow for 'short hopping' on release:
