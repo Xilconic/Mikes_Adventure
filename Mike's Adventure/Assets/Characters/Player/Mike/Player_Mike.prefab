@@ -295,9 +295,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 337e00cdab03b49469be996c36bc66ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _movementInput: {x: 0, y: 0}
+  _normalizedMovementInput: {x: 0, y: 0}
   MaxRunSpeed: 10
   MaxWalkSpeed: 5
+  LateralInputDeadZone: 0.1
+  MaxChrouchWalkSpeed: 3
+  CrouchInputZone: -0.5
+  CrouchLateralInputDeadZone: 0.1
   JumpImpulse: 10
+  JumpingGravityScale: 1
+  FallingGravityScale: 3
+  JumpBuffer: 0.1
+  CoyoteTimeBuffer: 0.1
 --- !u!114 &3266260841678380136
 MonoBehaviour:
   m_ObjectHideFlags: 0

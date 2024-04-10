@@ -5,4 +5,6 @@
     internal const string Jog = "mike_jog";
     internal const string Jump = "mike_jump";
     internal const string Falling = "mike_falling";
+    internal const string CrouchIdle = "mike_crouch_idle";
+    internal const string CrouchWalk = "mike_crouch_walk";
 }

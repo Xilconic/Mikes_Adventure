@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -11,7 +12,10 @@ public class PlayerController : MonoBehaviour
     private Rigidbody2D _rb;
     private Animator _animator;
     private TouchingDirections _touchingDirections;
+    [SerializeField, ReadOnlyField]
     private Vector2 _movementInput = Vector2.zero;
+    [SerializeField, ReadOnlyField]
+    private Vector2 _normalizedMovementInput = Vector2.zero;
     private string _currentAnimationClipName;
 
     private bool _isFacingRight = true;
@@ -29,13 +33,28 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private bool IsRisingInAir => _rb.velocity.y > 0;
+    /// <remarks>
+    /// Due to inaccuracies of the physica simulation, checking for '> 0' was giving 
+    /// 'in mid air' readings when walking left. Adding a bit of deadzone before being
+    /// considered in the air.
+    /// </remarks>
+    private bool IsRisingInAir => _rb.velocity.y > 1e-5;
+    private bool HasJumpBeenTriggeredRecently => _jumpInputCooldown > 0;
+    private bool HasLeftPlatformRecently => _coyoteTimeCooldown > 0;
 
     [Tooltip("Determines the maximum run-speed")]
     public float MaxRunSpeed = 10f;
-
     [Tooltip("Determines the maximum walk-speed")]
     public float MaxWalkSpeed = 5f;
+    [Tooltip("Determines the lateral input dead-zone")]
+    public float LateralInputDeadZone = 0.1f;
+
+    [Tooltip("Determines the maximum walk-speed while crouched")]
+    public float MaxChrouchWalkSpeed = 3f;
+    [Tooltip("Determines the y-input level for detecting 'crouch input'")]
+    public float CrouchInputZone = -0.5f;
+    [Tooltip("Determines the crouch lateral input dead-zone")]
+    public float CrouchLateralInputDeadZone = 0.1f;
 
     [Tooltip("Determines the jump strength")]
     public float JumpImpulse = 10f;
@@ -68,10 +87,14 @@ public class PlayerController : MonoBehaviour
         Debug.Assert(MaxRunSpeed > 0, "'MaxRunSpeed' must be greater than 0!");
         Debug.Assert(MaxWalkSpeed > 0, "'MaxWalkSpeed' must be greater than 0!");
         Debug.Assert(MaxWalkSpeed <= MaxRunSpeed, "'MaxWalkSpeed' must be less than or equal to 'MaxRunSpeed'!");
+        Debug.Assert(LateralInputDeadZone >= 0, "'LateralInputDeadZone' must be greater than 0!");
         Debug.Assert(JumpImpulse > 0, "'JumpImpulse' must be greater than 0!");
         Debug.Assert(JumpingGravityScale > 0, "'JumpingGravityScale' must be greater than 0!");
         Debug.Assert(FallingGravityScale > 0, "'FallingGravityScale' must be greater than 0!");
         Debug.Assert(JumpBuffer >= 0, "'JumpBuffer' must be greater than or equal to 0!");
+        Debug.Assert(MaxChrouchWalkSpeed > 0, "'MaxChrouchWalkSpeed' must be greater than 0!");
+        Debug.Assert(-1f <= CrouchInputZone && CrouchInputZone <= 0.0f, "'CrouchInputZone' must be in range [-1.0, 0.0]!");
+        Debug.Assert(CrouchLateralInputDeadZone >= 0, "'CrouchLateralInputDeadZone' must be greater than 0!");
     }
 
     private void Start()
@@ -87,52 +110,66 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        _rb.velocity = new Vector2(_movementInput.x * MaxRunSpeed, _rb.velocity.y);
         if (_touchingDirections.IsGrounded)
         {
             _touchedGround = true;
 
-            if (_jumpInputCooldown > 0)
+            if (HasJumpBeenTriggeredRecently)
             {
-                _jumpInputCooldown = 0;
-                ChangeAnimationState(AnimationClipNames.Jump);
-                _rb.gravityScale = JumpingGravityScale;
-                _rb.velocity = new Vector2(_rb.velocity.x, JumpImpulse);
+                _rb.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
+                PerformJump();
             }
             else if (IsRisingInAir)
             {
                 // Keep using the 'Jump' animation clip while going up in the air
                 // TODO: What if we have effects that knock us up in the air? Enemy attacks, traps, bouncy pads? Then we should be setting a 'air rising' animation when not in the middle of the 'jump squat' animation.
+                _rb.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
             }
             else
             {
-                if (_rb.velocity.x == 0)
+                if (_normalizedMovementInput.y < CrouchInputZone)
                 {
-                    ChangeAnimationState(AnimationClipNames.Idle);
-                }
-                else if (Mathf.Abs(_rb.velocity.x) <= MaxWalkSpeed)
-                {
-                    ChangeAnimationState(AnimationClipNames.Walk);
+                    // Have a stable dead-zone for crouching to allow for standing still while crouched:
+                    if (Mathf.Abs(_movementInput.x) <= CrouchLateralInputDeadZone)
+                    {
+                        _rb.AdjustVelocityX(0);
+                        ChangeAnimationState(AnimationClipNames.CrouchIdle);
+                    }
+                    else
+                    {
+                        _rb.AdjustVelocityX(_movementInput.x * MaxChrouchWalkSpeed);
+                        ChangeAnimationState(AnimationClipNames.CrouchWalk);
+                    }
                 }
                 else
                 {
-                    ChangeAnimationState(AnimationClipNames.Jog);
+                    _rb.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
+                    if (Mathf.Abs(_rb.velocity.x) > MaxWalkSpeed)
+                    {
+                        ChangeAnimationState(AnimationClipNames.Jog);
+                    }
+                    else if (Mathf.Abs(_rb.velocity.x) > 1e-5)
+                    {
+                        ChangeAnimationState(AnimationClipNames.Walk);
+                    }
+                    else
+                    {
+                        ChangeAnimationState(AnimationClipNames.Idle);
+                    }
                 }
             }
         }
         else
         {
+            _rb.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
             // Went from touching the ground to no longer touching the ground:
             if (_touchedGround) 
             {
                 _coyoteTimeCooldown = CoyoteTimeBuffer;
             }
-            else if (_coyoteTimeCooldown > 0 && _jumpInputCooldown > 0)
+            else if (HasLeftPlatformRecently && HasJumpBeenTriggeredRecently)
             {
-                _jumpInputCooldown = 0;
-                ChangeAnimationState(AnimationClipNames.Jump);
-                _rb.gravityScale = JumpingGravityScale;
-                _rb.velocity = new Vector2(_rb.velocity.x, JumpImpulse);
+                PerformJump();
             }
             
             if (!IsRisingInAir)
@@ -145,9 +182,18 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private void PerformJump()
+    {
+        _jumpInputCooldown = 0;
+        ChangeAnimationState(AnimationClipNames.Jump);
+        _rb.gravityScale = JumpingGravityScale;
+        _rb.AdjustVelocityY(JumpImpulse);
+    }
+
     public void OnMove(InputAction.CallbackContext context)
     {
         _movementInput = context.ReadValue<Vector2>();
+        _normalizedMovementInput = _movementInput.normalized;
 
         if (_movementInput.x > 0 && !IsFacingRight)
         {
@@ -168,7 +214,7 @@ public class PlayerController : MonoBehaviour
         // Allow for 'short hopping' on release:
         if (context.canceled && IsRisingInAir)
         {
-            _rb.velocity = new Vector2(_rb.velocity.x, _rb.velocity.y * 0.5f);
+            _rb.AdjustVelocityY(_rb.velocity.y * 0.5f);
         }
     }
 
