@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Playables;
 
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(Animator))]
@@ -78,6 +79,9 @@ public class PlayerController : MonoBehaviour
     private float _coyoteTimeCooldown = 0;
     private bool _touchedGround = false;
 
+    [field: SerializeField, ReadOnlyField, Tooltip("Indicates the state the PlayerController is in.")]
+    private State PlayerState { get; set; }
+
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
@@ -129,6 +133,7 @@ public class PlayerController : MonoBehaviour
             {
                 if (_normalizedMovementInput.y < CrouchInputZone)
                 {
+                    PlayerState = State.Crouching;
                     // Have a stable dead-zone for crouching to allow for standing still while crouched:
                     if (Mathf.Abs(_movementInput.x) <= CrouchLateralInputDeadZone)
                     {
@@ -143,6 +148,7 @@ public class PlayerController : MonoBehaviour
                 }
                 else
                 {
+                    PlayerState = State.Grounded;
                     _rb.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
                     if (Mathf.Abs(_rb.velocity.x) > MaxWalkSpeed)
                     {
@@ -161,6 +167,8 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
+            PlayerState = State.InMidAir;
+
             _rb.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
             // Went from touching the ground to no longer touching the ground:
             if (_touchedGround) 
@@ -225,5 +233,12 @@ public class PlayerController : MonoBehaviour
             _animator.Play(newAnimationClipName);
             _currentAnimationClipName = newAnimationClipName;
         }
+    }
+
+    private enum State
+    {
+        Grounded,
+        Crouching,
+        InMidAir
     }
 }
