@@ -118,7 +118,7 @@ public class PlayerController : MonoBehaviour
         {
             _touchedGround = true;
 
-            if (HasJumpBeenTriggeredRecently)
+            if (HasJumpBeenTriggeredRecently && !_touchingDirections.IsOnCeiling)
             {
                 _rb.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
                 PerformJump();
