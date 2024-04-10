@@ -15,9 +15,10 @@ GameObject:
   - component: {fileID: 6781819486922805654}
   - component: {fileID: 4602905949265607049}
   - component: {fileID: 618693469184148768}
-  m_Layer: 0
+  - component: {fileID: 3266260841678380136}
+  m_Layer: 7
   m_Name: Player_Mike
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -261,6 +262,22 @@ MonoBehaviour:
       m_Calls: []
     m_ActionId: 0e8a44d5-62fe-4918-961e-e680cb65cc6f
     m_ActionName: UI/TrackedDeviceOrientation
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 618693469184148768}
+        m_TargetAssemblyTypeName: PlayerController, Assembly-CSharp
+        m_MethodName: OnJump
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: beb658af-7acc-4daf-82e1-9cb35eef837a
+    m_ActionName: Player/Jump[/XInputControllerWindows/buttonSouth,/Keyboard/space]
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Player
@@ -280,3 +297,36 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   MaxRunSpeed: 10
   MaxWalkSpeed: 5
+  JumpImpulse: 10
+--- !u!114 &3266260841678380136
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6959799432808149664}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dfc8c52f03b53844389d5d441391c0c5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  CastFilter:
+    useTriggers: 0
+    useLayerMask: 1
+    useDepth: 0
+    useOutsideDepth: 0
+    useNormalAngle: 0
+    useOutsideNormalAngle: 0
+    layerMask:
+      serializedVersion: 2
+      m_Bits: 64
+    minDepth: 0
+    maxDepth: 0
+    minNormalAngle: 0
+    maxNormalAngle: 0
+  GroundDistance: 0.05
+  WallDistance: 0.2
+  CeilingDistance: 0.05
+  <IsGrounded>k__BackingField: 0
+  <IsOnWall>k__BackingField: 0
+  <IsOnCeiling>k__BackingField: 0

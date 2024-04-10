@@ -5,12 +5,12 @@ using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(Animator))]
+[RequireComponent(typeof(TouchingDirections))]
 public class PlayerController : MonoBehaviour
 {
-    //TODO: I do not know why, but running on a flat surface can cause the character to bounce upwards :/
-
     private Rigidbody2D _rb;
     private Animator _animator;
+    private TouchingDirections _touchingDirections;
     private Vector2 _movementInput = Vector2.zero;
     private string _currentAnimationClipName;
 
@@ -29,19 +29,26 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    private bool IsRisingInAir => _rb.velocity.y > 0;
+
     [Tooltip("Determines the maximum run-speed")]
     public float MaxRunSpeed = 10f;
 
     [Tooltip("Determines the maximum walk-speed")]
     public float MaxWalkSpeed = 5f;
 
+    [Tooltip("Determines the jump strength")]
+    public float JumpImpulse = 10f;
+
     private void Awake()
     {
         _rb = GetComponent<Rigidbody2D>();
         _animator = GetComponent<Animator>();
+        _touchingDirections = GetComponent<TouchingDirections>();
         Debug.Assert(MaxRunSpeed > 0, "'MaxRunSpeed' must be greater than 0!");
         Debug.Assert(MaxWalkSpeed > 0, "'MaxWalkSpeed' must be greater than 0!");
         Debug.Assert(MaxWalkSpeed <= MaxRunSpeed, "'MaxWalkSpeed' must be less than or equal to 'MaxRunSpeed'!");
+        Debug.Assert(JumpImpulse > 0, "'JumpImpulse' must be greater than 0!");
     }
 
     private void Start()
@@ -57,17 +64,28 @@ public class PlayerController : MonoBehaviour
     private void FixedUpdate()
     {
         _rb.velocity = new Vector2(_movementInput.x * MaxRunSpeed, _rb.velocity.y);
-        if(_rb.velocity.x == 0)
+        if(_touchingDirections.IsGrounded &&
+            !IsRisingInAir) //Not rising into the air
         {
-            ChangeAnimationState(AnimationClipNames.Idle);
-        }
-        else if(Mathf.Abs(_rb.velocity.x) <= MaxWalkSpeed)
-        {
-            ChangeAnimationState(AnimationClipNames.Walk);
+            if (_rb.velocity.x == 0)
+            {
+                ChangeAnimationState(AnimationClipNames.Idle);
+            }
+            else if (Mathf.Abs(_rb.velocity.x) <= MaxWalkSpeed)
+            {
+                ChangeAnimationState(AnimationClipNames.Walk);
+            }
+            else
+            {
+                ChangeAnimationState(AnimationClipNames.Jog);
+            }
         }
         else
         {
-            ChangeAnimationState(AnimationClipNames.Jog);
+            if (_rb.velocity.y < 0)
+            {
+                ChangeAnimationState(AnimationClipNames.Falling);
+            }
         }
     }
 
@@ -82,6 +100,21 @@ public class PlayerController : MonoBehaviour
         else if (_movementInput.x < 0 && IsFacingRight)
         {
             IsFacingRight = false;
+        }
+    }
+
+    public void OnJump(InputAction.CallbackContext context)
+    {
+        if (context.started &&
+            _touchingDirections.IsGrounded)
+        {
+            ChangeAnimationState(AnimationClipNames.Jump);
+            _rb.velocity = new Vector2(_rb.velocity.x, JumpImpulse);
+        }
+        // Allow for 'short hopping' on release:
+        if (context.canceled && IsRisingInAir)
+        {
+            _rb.velocity = new Vector2(_rb.velocity.x, _rb.velocity.y * 0.5f);
         }
     }
 
