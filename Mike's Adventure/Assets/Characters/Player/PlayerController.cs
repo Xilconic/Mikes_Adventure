@@ -178,7 +178,7 @@ public class PlayerController : MonoBehaviour
                 _rb.gravityScale = FallingGravityScale;
             }
 
-            if (_touchingDirections.IsOnWall)
+            if (_touchingDirections.IsOnWall && !IsRisingInAir)
             {
                 PlayerState = State.InMidAir;
                 ChangeAnimationState(AnimationClipNames.WallSlide);
