@@ -1,13 +1,7 @@
 ﻿using UnityEngine;
 
-public class PlayOneShotBehavior : StateMachineBehaviour
+public class PlayOneShotBehavior : PlayAudioClipBehavior
 {
-    [Tooltip("Determines the AudioClip to be played.")]
-    public AudioClip SoundToPlay;
-
-    [Tooltip("Determines the volume of 'SoundToPlay' when played, in range [0.0, 1.0].")]
-    public float Volume = 1f;
-
     [Tooltip("Determines if 'SoundToPlay' is played when the state is entered.")]
     public bool PlayOnEnter = true;
 
@@ -27,7 +21,7 @@ public class PlayOneShotBehavior : StateMachineBehaviour
         if (PlayOnEnter)
         {
             // Assumption: It's always the animator owner that should be playing the sound
-            AudioSource.PlayClipAtPoint(SoundToPlay, animator.gameObject.transform.position, Volume);
+            PlaySoundAtAnimator(animator);
         }
 
         _timeSinceEntered = 0f;
@@ -45,7 +39,7 @@ public class PlayOneShotBehavior : StateMachineBehaviour
                 _hasPlayedDelayedSound = true;
 
                 // Assumption: It's always the animator owner that should be playing the sound
-                AudioSource.PlayClipAtPoint(SoundToPlay, animator.gameObject.transform.position, Volume);
+                PlaySoundAtAnimator(animator);
             }
         }
     }
@@ -56,7 +50,7 @@ public class PlayOneShotBehavior : StateMachineBehaviour
         if (PlayOnExit)
         {
             // Assumption: It's always the animator owner that should be playing the sound
-            AudioSource.PlayClipAtPoint(SoundToPlay, animator.gameObject.transform.position, Volume);
+            PlaySoundAtAnimator(animator);
         }
     }
 

@@ -1,13 +1,7 @@
 ﻿using UnityEngine;
 
-public class PlayOnLoopBehavior : StateMachineBehaviour
+public class PlayOnLoopBehavior : PlayAudioClipBehavior
 {
-    [Tooltip("Determines the AudioClip to be played.")]
-    public AudioClip SoundToPlay;
-
-    [Tooltip("Determines the volume of 'SoundToPlay' when played, in range [0.0, 1.0].")]
-    public float Volume = 1f;
-
     [Tooltip("Determines if 'SoundToPlay' is played when the state is entered.")]
     public bool PlayOnEnter = true;
 
@@ -22,7 +16,7 @@ public class PlayOnLoopBehavior : StateMachineBehaviour
         if (PlayOnEnter)
         {
             // Assumption: It's always the animator owner that should be playing the sound
-            AudioSource.PlayClipAtPoint(SoundToPlay, animator.gameObject.transform.position, Volume);
+            PlaySoundAtAnimator(animator);
         }
     }
 
@@ -33,7 +27,7 @@ public class PlayOnLoopBehavior : StateMachineBehaviour
         if(_currentCooldown <= 0)
         {
             // Assumption: It's always the animator owner that should be playing the sound
-            AudioSource.PlayClipAtPoint(SoundToPlay, animator.gameObject.transform.position, Volume);
+            PlaySoundAtAnimator(animator);
 
             _currentCooldown = SoundToPlayLoopCooldown;
         }
