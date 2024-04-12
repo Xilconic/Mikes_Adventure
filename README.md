@@ -8,6 +8,9 @@ My first ever atempt at making an action platformer.
 ### Hero character assets
 [rvros Animated Pixel Adventurer](https://rvros.itch.io/animated-pixel-hero)
 
+### Sound Effects
+[Leohpaz Free RPG esentials SFX Bundle](https://leohpaz.itch.io/rpg-essentials-sfx-free)
+
 ## Packages
 ### Input System
 Uses version 1.7.0 of the `Input System` package by Unity Technologies Inc.
