@@ -79,6 +79,9 @@ public class PlayerController : MonoBehaviour
     private float _coyoteTimeCooldown = 0;
     private bool _touchedGround = false;
 
+    [Tooltip("Determines the maximum Wall-Slide velocity")]
+    public float MaxWallSlideVelocity = -3f;
+
     [field: SerializeField, ReadOnlyField, Tooltip("Indicates the state the PlayerController is in.")]
     private State PlayerState { get; set; }
 
@@ -99,6 +102,7 @@ public class PlayerController : MonoBehaviour
         Debug.Assert(MaxChrouchWalkSpeed > 0, "'MaxChrouchWalkSpeed' must be greater than 0!");
         Debug.Assert(-1f <= CrouchInputZone && CrouchInputZone <= 0.0f, "'CrouchInputZone' must be in range [-1.0, 0.0]!");
         Debug.Assert(CrouchLateralInputDeadZone >= 0, "'CrouchLateralInputDeadZone' must be greater than 0!");
+        Debug.Assert(MaxWallSlideVelocity <= 0, "'MaxWallSlideVelocity' must be less than or equal to 0!");
     }
 
     private void Start()
@@ -174,6 +178,8 @@ public class PlayerController : MonoBehaviour
             {
                 PlayerState = State.InMidAir;
                 ChangeAnimationState(AnimationClipNames.WallSlide);
+
+                _rb.AdjustVelocityY(MathF.Max(MaxWallSlideVelocity, _rb.velocity.y));
             }
             else
             {
