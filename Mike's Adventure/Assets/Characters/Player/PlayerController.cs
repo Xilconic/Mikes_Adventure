@@ -168,25 +168,33 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            PlayerState = State.InMidAir;
-
             _rb.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
-            // Went from touching the ground to no longer touching the ground:
-            if (_touchedGround) 
+
+            if (_touchingDirections.IsOnWall)
             {
-                _coyoteTimeCooldown = CoyoteTimeBuffer;
+                PlayerState = State.InMidAir;
+                ChangeAnimationState(AnimationClipNames.WallSlide);
             }
-            else if (HasLeftPlatformRecently && HasJumpBeenTriggeredRecently)
+            else
             {
-                PerformJump();
+                PlayerState = State.InMidAir;
+                // Went from touching the ground to no longer touching the ground:
+                if (_touchedGround)
+                {
+                    _coyoteTimeCooldown = CoyoteTimeBuffer;
+                }
+                else if (HasLeftPlatformRecently && HasJumpBeenTriggeredRecently)
+                {
+                    PerformJump();
+                }
+
+                if (!IsRisingInAir)
+                {
+                    _rb.gravityScale = FallingGravityScale;
+                    ChangeAnimationState(AnimationClipNames.Falling);
+                }
             }
             
-            if (!IsRisingInAir)
-            {
-                _rb.gravityScale = FallingGravityScale;
-                ChangeAnimationState(AnimationClipNames.Falling);
-            }
-
             _touchedGround = false;
         }
     }
