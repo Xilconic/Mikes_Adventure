@@ -14,6 +14,5 @@ public abstract class PlayAudioClipBehavior : StateMachineBehaviour
         audioSource.clip = SoundToPlay;
         audioSource.volume = Volume;
         audioSource.Play();
-        //AudioSource.PlayClipAtPoint(SoundToPlay, animator.gameObject.transform.position, Volume);
     }
 }
