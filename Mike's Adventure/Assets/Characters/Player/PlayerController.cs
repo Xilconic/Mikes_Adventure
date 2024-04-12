@@ -173,6 +173,10 @@ public class PlayerController : MonoBehaviour
         else
         {
             _rb.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
+            if(!IsRisingInAir)
+            {
+                _rb.gravityScale = FallingGravityScale;
+            }
 
             if (_touchingDirections.IsOnWall)
             {
@@ -196,7 +200,6 @@ public class PlayerController : MonoBehaviour
 
                 if (!IsRisingInAir)
                 {
-                    _rb.gravityScale = FallingGravityScale;
                     ChangeAnimationState(AnimationClipNames.Falling);
                 }
             }
