@@ -15,4 +15,10 @@ public abstract class PlayAudioClipBehavior : StateMachineBehaviour
         audioSource.volume = Volume;
         audioSource.Play();
     }
+
+    protected void StopSoundAtAnimator(Animator animator)
+    {
+        var audioSource = animator.GetComponent<AudioSource>();
+        audioSource.Stop();
+    }
 }

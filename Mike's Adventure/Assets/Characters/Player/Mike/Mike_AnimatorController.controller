@@ -42,6 +42,7 @@ MonoBehaviour:
   Volume: 0.25
   PlayOnEnter: 0
   SoundToPlayLoopCooldown: 0.25
+  StopOnExit: 0
 --- !u!1102 &-4311911678372781994
 AnimatorState:
   serializedVersion: 6
@@ -111,6 +112,7 @@ MonoBehaviour:
   Volume: 0.25
   PlayOnEnter: 0
   SoundToPlayLoopCooldown: 0.25
+  StopOnExit: 0
 --- !u!1102 &-2321822962917022319
 AnimatorState:
   serializedVersion: 6
@@ -193,7 +195,8 @@ AnimatorState:
   m_Speed: 1
   m_CycleOffset: 0
   m_Transitions: []
-  m_StateMachineBehaviours: []
+  m_StateMachineBehaviours:
+  - {fileID: 6405246776377564056}
   m_Position: {x: 50, y: 50, z: 0}
   m_IKOnFeet: 0
   m_WriteDefaultValues: 1
@@ -295,6 +298,7 @@ MonoBehaviour:
   Volume: 0.0625
   PlayOnEnter: 1
   SoundToPlayLoopCooldown: 0.3
+  StopOnExit: 0
 --- !u!1102 &5252095375585659289
 AnimatorState:
   serializedVersion: 6
@@ -322,6 +326,23 @@ AnimatorState:
   m_MirrorParameter: 
   m_CycleOffsetParameter: 
   m_TimeParameter: 
+--- !u!114 &6405246776377564056
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 098cd45b95e66d14d8398ad8ff287945, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SoundToPlay: {fileID: 8300000, guid: 561cc2e361e542a41a5a9662053e5f5d, type: 3}
+  Volume: 0.4
+  PlayOnEnter: 1
+  SoundToPlayLoopCooldown: 0.45
+  StopOnExit: 1
 --- !u!1102 &6487391933317662527
 AnimatorState:
   serializedVersion: 6

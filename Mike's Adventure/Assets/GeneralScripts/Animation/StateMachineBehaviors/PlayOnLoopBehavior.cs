@@ -9,6 +9,9 @@ public class PlayOnLoopBehavior : PlayAudioClipBehavior
     public float SoundToPlayLoopCooldown = 1.0f;
     private float _currentCooldown = 0;
 
+    [Tooltip("Determines if 'SoundToPlay' need to stop immediately when the state is exited.")]
+    public bool StopOnExit = false;
+
     // OnStateEnter is called when a transition starts and the state machine starts to evaluate this state
     override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
@@ -30,6 +33,15 @@ public class PlayOnLoopBehavior : PlayAudioClipBehavior
             PlaySoundAtAnimator(animator);
 
             _currentCooldown = SoundToPlayLoopCooldown;
+        }
+    }
+
+    // OnStateExit is called when a transition ends and the state machine finishes evaluating this state
+    override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    {
+        if (StopOnExit)
+        {
+            StopSoundAtAnimator(animator);
         }
     }
 }
