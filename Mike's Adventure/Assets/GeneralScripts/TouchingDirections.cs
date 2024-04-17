@@ -5,7 +5,7 @@
 /// the ground, touching a wall or touching a ceiling.
 /// </summary>
 [RequireComponent(typeof(CapsuleCollider2D))]
-public class TouchingDirections : MonoBehaviour
+public class TouchingDirections : MonoBehaviour, ITouchingDirections
 {
     private readonly RaycastHit2D[] _groundHits = new RaycastHit2D[5];
     private readonly RaycastHit2D[] _wallHits = new RaycastHit2D[5];
@@ -47,4 +47,11 @@ public class TouchingDirections : MonoBehaviour
         IsOnWall = _touchingCollider.Cast(WallCheckDirection, CastFilter, _wallHits, WallDistance) > 0;
         IsOnCeiling = _touchingCollider.Cast(Vector2.up, CastFilter, _ceilingHits, CeilingDistance) > 0;
     }
+}
+
+public interface ITouchingDirections
+{
+    public bool IsGrounded { get; }
+    public bool IsOnWall { get; }
+    public bool IsOnCeiling { get; }
 }
