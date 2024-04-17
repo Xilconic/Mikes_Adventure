@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-internal static class RigidBody2DExtensions
+public static class RigidBody2DExtensions
 {
     public static void AdjustVelocityX(this Rigidbody2D rigidbody, float newX)
     {
