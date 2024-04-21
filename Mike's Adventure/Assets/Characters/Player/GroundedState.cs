@@ -11,10 +11,11 @@ namespace Assets.Characters.Player
     {
         /// <seealso cref="PlayerController.CrouchInputZone"/>
         private const float CrouchVerticalInputThreshold = -0.5f;
+        private readonly Rigidbody2D _rigidbody;
 
-        public GroundedState() : base(new StandingState())
+        public GroundedState(Rigidbody2D rigidbody) : base(new StandingState(rigidbody))
         {
-            
+            _rigidbody = rigidbody;
         }
 
         public override void SetMovement(Vector2 movementInput)
@@ -25,7 +26,7 @@ namespace Assets.Characters.Player
             }
             else
             {
-                ChangeCurrentState(new StandingState());
+                ChangeCurrentState(new StandingState(_rigidbody));
             }
 
             base.SetMovement(movementInput);

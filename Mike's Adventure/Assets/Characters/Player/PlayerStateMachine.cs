@@ -12,12 +12,20 @@ namespace Assets.Characters.Player
     {
         /// <seealso cref="PlayerController.JumpBuffer">
         private const float JumpBuffer = 0.1f;
+        private readonly Rigidbody2D _rigidbody;
         private float _jumpBufferCooldown = 0;
 
         private Vector2 _movementInput;
 
+        public PlayerStateMachine(Rigidbody2D rigidbody)
+        {
+            _rigidbody = rigidbody;
+            CurrentState = new GroundedState(_rigidbody);
+        }
+
         public ITime Time { get; set; } = new UnityTime();
-        public IState CurrentState { get; private set; } = new GroundedState();
+
+        public IState CurrentState { get; private set; }
         public IState ActiveChildState => CurrentState.ActiveChildState;
 
         public void Jump()
@@ -44,7 +52,7 @@ namespace Assets.Characters.Player
             }
             else if (touchingDirections.IsGrounded && CurrentState is AirialState)
             {
-                var groundedState = new GroundedState();
+                var groundedState = new GroundedState(_rigidbody);
                 CurrentState = groundedState;
                 CurrentState.OnEnter();
                 if (_jumpBufferCooldown > 0)
@@ -82,6 +90,15 @@ namespace Assets.Characters.Player
             {
                 _jumpBufferCooldown -= Time.DeltaTime;
             }
+        }
+
+        /// <summary>
+        /// Method intended to be called inside <c>MonoBehavior.FixedUpdate()</c>.
+        /// </summary>
+        /// <seealse cref="MonoBehaviour.FixedUpdate"/>
+        public void FixedUpdate()
+        {
+            CurrentState.FixedUpdate();
         }
     }
 }

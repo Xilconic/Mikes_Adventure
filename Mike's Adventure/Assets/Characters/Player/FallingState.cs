@@ -43,5 +43,10 @@ namespace Assets.Characters.Player
                 _coyoteTimeCooldown -= _time.DeltaTime;
             }
         }
+
+        public void FixedUpdate()
+        {
+
+        }
     }
 }

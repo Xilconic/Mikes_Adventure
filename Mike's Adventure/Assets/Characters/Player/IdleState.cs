@@ -9,7 +9,12 @@ namespace Assets.Characters.Player
 {
     public class IdleState : IState
     {
-        public IdleState() {
+        private readonly Rigidbody2D _rigidbody;
+
+        public IdleState(Rigidbody2D rigidbody) 
+        {
+            _rigidbody = rigidbody;
+
             ActiveChildState = this;
         }
 
@@ -24,7 +29,11 @@ namespace Assets.Characters.Player
 
         public void Update()
         {
-            throw new NotImplementedException();
+        }
+
+        public void FixedUpdate()
+        {
+            _rigidbody.AdjustVelocityX(0);
         }
 
         public void SetMovement(Vector2 movementInput)

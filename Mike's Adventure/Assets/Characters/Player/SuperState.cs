@@ -37,6 +37,11 @@ namespace Assets.Characters.Player
             CurrentState.Update();
         }
 
+        public void FixedUpdate()
+        {
+            CurrentState.FixedUpdate();
+        }
+
         protected void ChangeCurrentState(IState newState)
         {
             CurrentState = newState;

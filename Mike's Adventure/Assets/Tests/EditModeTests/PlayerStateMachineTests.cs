@@ -9,14 +9,17 @@ using Assets.Tests.EditModeTests;
 
 public class PlayerStateMachineTests
 {
+    protected Rigidbody2D _rigidBody2D;
     protected PlayerStateMachine _sut;
     protected TimeMock _timeMock;
 
     [SetUp]
     public void SetUp()
     {
+        var gameObject = new GameObject();
+        _rigidBody2D = gameObject.AddComponent<Rigidbody2D>();
         _timeMock = new TimeMock();
-        _sut = new PlayerStateMachine()
+        _sut = new PlayerStateMachine(_rigidBody2D)
         {
             Time = _timeMock,
         };
@@ -55,6 +58,19 @@ public class PlayerStateMachineTests
 
     public class GivenActiveChildStateIsIdleState : PlayerStateMachineTests
     {
+        [Test]
+        [TestCase(1f)]
+        [TestCase(-1f)]
+        public void AndRigidBodyHasVelocityOnX_WhenFixedUpdate_ThenRigidBodyHasVelocityZeroOnX(
+            float someVelocity)
+        {
+            _rigidBody2D.velocity = new Vector2(someVelocity, 0);
+
+            _sut.FixedUpdate();
+
+            Assert.AreEqual(0, _rigidBody2D.velocity.x);
+        }
+
         [Test]
         public void WhenSettingZeroMovementInput_ThenCurrentStateIsGroundedStateAndActiveChildStateIsIdleState()
         {
@@ -194,6 +210,8 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<GroundMovementState>(_sut.ActiveChildState);
         }
 
+        //TODO: FixedUpdate => Set RigidBody2D X-Velocity as ratio of x-input
+
         [Test]
         public void WhenSettingZeroMovementInput_ThenCurrentStateIsGroundedStateAndActiveChildStateIsIdleState()
         {
@@ -322,6 +340,8 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
             Assert.IsInstanceOf<CrouchIdleState>(_sut.ActiveChildState);
         }
+
+        //TODO: FixedUpdate => Set RigidBody2D X-Velocity 0 even with little horizontal input
 
         [Test]
         public void WhenSettingZeroMovementInput_ThenCurrentStateIsGroundedStateAndActiveChildStateIsIdleState()
@@ -465,6 +485,8 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
             Assert.IsInstanceOf<CrouchMovementState>(_sut.ActiveChildState);
         }
+
+        //TODO: FixedUpdate => Set RigidBody2D X-Velocity based on input (expected slower movement than standing)
 
         [Test]
         public void WhenSettingZeroMovementInput_ThenCurrentStateIsGroundedStateAndActiveChildStateIsIdleState()
@@ -610,6 +632,8 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
             Assert.IsInstanceOf<FallingState>(_sut.ActiveChildState);
         }
+
+        //TODO: FixedUpdate => Set RigidBody2D X-Velocity based on input (Same are ground movement)
 
         [Test]
         public void WhenStillFalling_ThenCurrentStateIsAirialStateAndActiveChildStateIsFallingState()
@@ -837,7 +861,8 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
         }
 
-        // TODO: velocity.y < 0 => Transition into falling
+        // TODO: Fixed Update where velocity.y < 0 => Transition into falling
+        // TODO: Jumping one-time sets RigidBody2D Y-Velocity
         // TODO: Jumping does not again set y velocity
         // TODO: Release Jump: Half vertical velocity
 

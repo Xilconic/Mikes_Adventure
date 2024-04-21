@@ -28,5 +28,11 @@ namespace Assets.Characters.Player
         /// </summary>
         /// <seealse cref="MonoBehaviour.Update"/>
         void Update();
+
+        /// <summary>
+        /// Method intended to be called inside <c>MonoBehavior.FixedUpdate()</c>.
+        /// </summary>
+        /// <seealse cref="MonoBehaviour.FixedUpdate"/>
+        void FixedUpdate();
     }
 }

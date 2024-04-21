@@ -7,35 +7,27 @@ using UnityEngine;
 
 namespace Assets.Characters.Player
 {
-    internal class StandingState : IState
+    internal class StandingState : SuperState
     {
-        public IState CurrentState { get; private set; } = new IdleState();
-        public IState ActiveChildState => CurrentState.ActiveChildState;
+        private readonly Rigidbody2D _rigidbody;
 
-        public bool CanJump => CurrentState.CanJump;
-
-        public void OnEnter()
+        public StandingState(Rigidbody2D rigidbody) : base(new IdleState(rigidbody))
         {
-            CurrentState.OnEnter();
+            _rigidbody = rigidbody;
         }
 
-        public void Update()
-        {
-            CurrentState.Update();
-        }
-
-        public void SetMovement(Vector2 movementInput)
+        public override void SetMovement(Vector2 movementInput)
         {
             if (movementInput.x != 0)
             {
-                CurrentState = new GroundMovementState();
-                CurrentState.OnEnter();
+                ChangeCurrentState(new GroundMovementState());
             }
             else
             {
-                CurrentState = new IdleState();
-                CurrentState.OnEnter();
+                ChangeCurrentState(new IdleState(_rigidbody));
             }
+
+            base.SetMovement(movementInput);
         }
     }
 }

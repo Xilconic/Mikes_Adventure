@@ -28,6 +28,11 @@ namespace Assets.Characters.Player
             
         }
 
+        public void FixedUpdate()
+        {
+
+        }
+
         public void SetMovement(Vector2 movementInput)
         {
             // Idle state does not care about movement input

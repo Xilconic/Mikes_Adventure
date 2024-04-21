@@ -28,6 +28,11 @@ namespace Assets.Characters.Player
             
         }
 
+        public void FixedUpdate()
+        {
+
+        }
+
         public void SetMovement(Vector2 movementInput)
         {
             // TODO: Do something with movement input
