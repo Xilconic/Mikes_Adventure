@@ -16,6 +16,18 @@ namespace Assets.Characters.Player
 
         public IState ActiveChildState { get; }
 
+        public bool CanJump => true;
+
+        public void OnEnter()
+        {
+            
+        }
+
+        public void Update()
+        {
+
+        }
+
         public void SetMovement(Vector2 movementInput)
         {
             // TOOD: Process input

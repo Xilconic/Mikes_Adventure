@@ -15,15 +15,29 @@ namespace Assets.Characters.Player
         public IState CurrentState { get; private set; } = new CrouchIdleState();
         public IState ActiveChildState => CurrentState.ActiveChildState;
 
+        public bool CanJump => CurrentState.CanJump;
+
+        public void OnEnter()
+        {
+            CurrentState.OnEnter();
+        }
+
+        public void Update()
+        {
+            CurrentState.Update();
+        }
+
         public void SetMovement(Vector2 movementInput)
         {
             if (Mathf.Abs(movementInput.x) > CrouchLateralInputDeadZone)
             {
                 CurrentState = new CrouchMovementState();
+                CurrentState.OnEnter();
             }
             else
             {
                 CurrentState = new CrouchIdleState();
+                CurrentState.OnEnter();
             }
 
             CurrentState.SetMovement(movementInput);

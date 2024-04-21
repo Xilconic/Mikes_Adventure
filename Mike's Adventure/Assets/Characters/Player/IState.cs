@@ -9,8 +9,24 @@ namespace Assets.Characters.Player
 {
     public interface IState
     {
-        IState ActiveChildState { get;}
+        IState ActiveChildState { get; }
+
+        /// <summary>
+        /// Indicates if Jumping is allowed or not.
+        /// </summary>
+        bool CanJump { get; }
 
         void SetMovement(Vector2 movementInput);
+
+        /// <summary>
+        /// Method intended to be called when this state is entered.
+        /// </summary>
+        void OnEnter();
+
+        /// <summary>
+        /// Method intended to be called inside <c>MonoBehavior.Update()</c>.
+        /// </summary>
+        /// <seealse cref="MonoBehaviour.Update"/>
+        void Update();
     }
 }

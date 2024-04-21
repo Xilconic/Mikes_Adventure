@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Assets.GeneralScripts;
 using UnityEngine;
 
 namespace Assets.Characters.Player
@@ -12,15 +13,19 @@ namespace Assets.Characters.Player
         private Vector2 _movementInput;
         private ITouchingDirections _touchingDirections;
 
+        public ITime Time { get; set; } = new UnityTime();
         public IState CurrentState { get; private set; } = new GroundedState();
-        public object ActiveChildState => CurrentState.ActiveChildState;
+        public IState ActiveChildState => CurrentState.ActiveChildState;
+
+        private bool IsTouchingCeiling => (!_touchingDirections?.IsOnCeiling) ?? true;
 
         public void Jump()
         {
-            if (!_touchingDirections?.IsOnCeiling ?? true)
+            if (IsTouchingCeiling && CurrentState.CanJump)
             {
-                var state = new AirialState();
+                var state = new AirialState(Time);
                 CurrentState = state;
+                CurrentState.OnEnter();
                 state.Jump();
             }
         }
@@ -31,11 +36,13 @@ namespace Assets.Characters.Player
 
             if (!touchingDirections.IsGrounded && CurrentState is GroundedState)
             {
-                CurrentState = new AirialState();
+                CurrentState = new AirialState(Time);
+                CurrentState.OnEnter();
             }
             else if (touchingDirections.IsGrounded && CurrentState is AirialState)
             {
                 CurrentState = new GroundedState();
+                CurrentState.OnEnter();
                 CurrentState.SetMovement(_movementInput);
             }
         }
@@ -44,6 +51,15 @@ namespace Assets.Characters.Player
         {
             _movementInput = movementInput;
             CurrentState.SetMovement(movementInput);
+        }
+
+        /// <summary>
+        /// Method intended to be called inside <c>MonoBehavior.Update()</c>.
+        /// </summary>
+        /// <seealse cref="MonoBehaviour.Update"/>
+        public void Update()
+        {
+            CurrentState.Update();
         }
     }
 }

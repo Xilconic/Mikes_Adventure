@@ -5,14 +5,21 @@ using UnityEngine;
 using UnityEngine.TestTools;
 using Assets.Characters.Player;
 using Assets.Tests;
+using Assets.Tests.EditModeTests;
 
 public class PlayerStateMachineTests
-{   protected PlayerStateMachine _sut;
+{
+    protected PlayerStateMachine _sut;
+    protected TimeMock _timeMock;
 
     [SetUp]
     public virtual void SetUp()
     {
-        _sut = new PlayerStateMachine();
+        _timeMock = new TimeMock();
+        _sut = new PlayerStateMachine()
+        {
+            Time = _timeMock,
+        };
     }
 
     public class GivenNewInstance : PlayerStateMachineTests
@@ -674,9 +681,77 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<CrouchMovementState>(_sut.ActiveChildState);
         }
 
-        // TODO: Introduce interface abstracting UnityEngine.Time static methods, implementation based on that class, and another Mock implementation for unit testing
-        // TODO: Coyote time: cooldown active + jump => Go into Jump State
-        // TODO: Coyoted time: cooldown inactive + jump => Remain in current state
+        [Test]
+        [TestCase(0f)]
+        [TestCase(0.09999f)]
+        public void WhenCoyoteTimeActiveAndJumpButtonPressed_ThenCurrentStateIsAirialStateAndActiveChildStateIsJumpState(
+            float secondsPassedSinceEnteringFallingState)
+        {
+            _timeMock.DeltaTime = secondsPassedSinceEnteringFallingState;
+            _sut.Update(); // Time progresses
+            Assert.IsTrue(_sut.ActiveChildState.CanJump);
+
+            _sut.Jump();
+
+            Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
+            Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
+        }
+
+        [Test]
+        [TestCase(0)] // 0 frames => 0s
+        [TestCase(5)] // 5 frames => 5/60s = 0.83333...s
+        [TestCase(6)] // 6 frames => 6/60s = ~0.1...s (suffers from limited precision rounding errors)
+        public void WhenCoyoteTimeActiveWhileMultiple60fpsFramesPassAndJumpButtonPressed_ThenCurrentStateIsAirialStateAndActiveChildStateIsJumpState(
+            int numberOfStandardFramesPassed)
+        {
+            _timeMock.DeltaTime = 1.0f/60.0f;
+            for (int i = 0; i < numberOfStandardFramesPassed; i++)
+            {
+                _sut.Update(); // Time progresses
+            }
+            Assert.IsTrue(_sut.ActiveChildState.CanJump);
+
+            _sut.Jump();
+
+            Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
+            Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
+        }
+
+        [Test]
+        [TestCase(1f)]
+        [TestCase(float.MaxValue)]
+        public void WhenCoyoteTimeClosedAgainAndJumpButtonPressed_ThenStateRemainsUnchanged(
+            float secondsPassedSinceEnteringFallingState)
+        {
+            _timeMock.DeltaTime = secondsPassedSinceEnteringFallingState;
+            _sut.Update(); // Time progresses
+            Assert.IsFalse(_sut.ActiveChildState.CanJump);
+
+            _sut.Jump();
+
+            Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
+            Assert.IsInstanceOf<FallingState>(_sut.ActiveChildState);
+        }
+
+        [Test]
+        [TestCase(7)] // 7 frames => 7/60s = 0.1s
+        [TestCase(60)] // 60 frames => 1s
+        public void WhenCoyoteTimeClosedAgainWhileMultiple60fpsFramesPassAndJumpButtonPressed_ThenStateRemainsUnchanged(
+            int numberOfStandardFramesPassed)
+        {
+            _timeMock.DeltaTime = 1.0f / 60.0f;
+            for (int i = 0; i < numberOfStandardFramesPassed; i++)
+            {
+                _sut.Update(); // Time progresses
+            }
+            Assert.IsFalse(_sut.ActiveChildState.CanJump);
+
+            _sut.Jump();
+
+            Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
+            Assert.IsInstanceOf<FallingState>(_sut.ActiveChildState);
+        }
+
         // TODO: Jump input buffer: Jump, wait small time, Hit ground => Go into Jump State
         // TODO: Jump input buffer: Jump, wait, Hit ground => remain in Idle state
     }
