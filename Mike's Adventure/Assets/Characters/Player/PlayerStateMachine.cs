@@ -11,17 +11,14 @@ namespace Assets.Characters.Player
     public class PlayerStateMachine
     {
         private Vector2 _movementInput;
-        private ITouchingDirections _touchingDirections;
 
         public ITime Time { get; set; } = new UnityTime();
         public IState CurrentState { get; private set; } = new GroundedState();
         public IState ActiveChildState => CurrentState.ActiveChildState;
 
-        private bool IsTouchingCeiling => (!_touchingDirections?.IsOnCeiling) ?? true;
-
         public void Jump()
         {
-            if (IsTouchingCeiling && CurrentState.CanJump)
+            if (CurrentState.CanJump)
             {
                 var state = new AirialState(Time);
                 CurrentState = state;
@@ -32,8 +29,6 @@ namespace Assets.Characters.Player
 
         public void NotifyTouchingDirections(ITouchingDirections touchingDirections)
         {
-            _touchingDirections = touchingDirections;
-
             if (!touchingDirections.IsGrounded && CurrentState is GroundedState)
             {
                 CurrentState = new AirialState(Time);
@@ -41,9 +36,15 @@ namespace Assets.Characters.Player
             }
             else if (touchingDirections.IsGrounded && CurrentState is AirialState)
             {
-                CurrentState = new GroundedState();
+                var groundedState = new GroundedState();
+                CurrentState = groundedState;
                 CurrentState.OnEnter();
                 CurrentState.SetMovement(_movementInput);
+            }
+
+            if (CurrentState is GroundedState groundState)
+            {
+                groundState.NotifyTouchingDirections(touchingDirections);
             }
         }
 

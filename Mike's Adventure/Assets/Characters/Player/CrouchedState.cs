@@ -12,10 +12,14 @@ namespace Assets.Characters.Player
         /// <seealso cref="PlayerController.CrouchLateralInputDeadZone"/>
         private const float CrouchLateralInputDeadZone = 0.1f;
 
+        private ITouchingDirections _touchingDirections;
+
         public IState CurrentState { get; private set; } = new CrouchIdleState();
         public IState ActiveChildState => CurrentState.ActiveChildState;
 
-        public bool CanJump => CurrentState.CanJump;
+        private bool IsTouchingCeiling => (!_touchingDirections?.IsOnCeiling) ?? true;
+
+        public bool CanJump => CurrentState.CanJump && IsTouchingCeiling;
 
         public void OnEnter()
         {
@@ -41,6 +45,11 @@ namespace Assets.Characters.Player
             }
 
             CurrentState.SetMovement(movementInput);
+        }
+
+        public void NotifyTouchingDirections(ITouchingDirections touchingDirections)
+        {
+            _touchingDirections = touchingDirections;
         }
     }
 }

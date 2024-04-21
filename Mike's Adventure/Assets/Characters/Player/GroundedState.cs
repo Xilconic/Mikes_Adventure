@@ -42,5 +42,13 @@ namespace Assets.Characters.Player
 
             CurrentState.SetMovement(movementInput);
         }
+
+        public void NotifyTouchingDirections(ITouchingDirections touchingDirections)
+        {
+            if (CurrentState is CrouchedState crouchedState)
+            {
+                crouchedState.NotifyTouchingDirections(touchingDirections);
+            }
+        }
     }
 }
