@@ -771,8 +771,55 @@ public class PlayerStateMachineTests
             AssertInitialStateConditions();
         }
 
-        // TODO: Jump input buffer: Jump, wait small time, Hit ground => Go into Jump State
-        // TODO: Jump input buffer: Jump, wait, Hit ground => remain in Idle state
+        [Test]
+        [TestCase(0f)]
+        [TestCase(0.09999f)]
+        public void WhenJumpButtonPressedMidairAndLandsWithJumpBufferActive_ThenCurrentStateIsAirialStateAndActiveChildStateIsJumpState(
+            float secondsPassedSinceJumpButtonPressed)
+        {
+            _timeMock.DeltaTime = 1f;
+            _sut.Update(); // Pass time beyond Coyote Time
+            _sut.Jump();
+            AssertInitialStateConditions();
+
+            _timeMock.DeltaTime = secondsPassedSinceJumpButtonPressed;
+            _sut.Update();
+            AssertInitialStateConditions();
+
+            var touchingDirections = new TouchingDirectionsStub
+            {
+                IsGrounded = true,
+            };
+            _sut.NotifyTouchingDirections(touchingDirections);
+
+            Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
+            Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
+        }
+
+        [Test]
+        [TestCase(1f)]
+        [TestCase(float.MaxValue)]
+        public void WhenJumpButtonPressedMidairAndLandsWithJumpBufferInactive_ThenCurrentStateIsGroundedAndActiveChildStateIsIdleState(
+            float secondsPassedSinceJumpButtonPressed)
+        {
+            _timeMock.DeltaTime = 1f;
+            _sut.Update(); // Pass time beyond Coyote Time
+            _sut.Jump();
+            AssertInitialStateConditions();
+
+            _timeMock.DeltaTime = secondsPassedSinceJumpButtonPressed;
+            _sut.Update();
+            AssertInitialStateConditions();
+
+            var touchingDirections = new TouchingDirectionsStub
+            {
+                IsGrounded = true,
+            };
+            _sut.NotifyTouchingDirections(touchingDirections);
+
+            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
+            Assert.IsInstanceOf<IdleState>(_sut.ActiveChildState);
+        }
     }
 
     public class GivenActiveChildStateIsJumpState : PlayerStateMachineTests
@@ -792,8 +839,6 @@ public class PlayerStateMachineTests
 
         // TODO: velocity.y < 0 => Transition into falling
         // TODO: Jumping does not again set y velocity
-        // TODO: Jump input buffer: Jump, wait small time, Hit ground => Go into Jump State
-        // TODO: Jump input buffer: Jump, wait, Hit ground => remain in Idle state
         // TODO: Release Jump: Half vertical velocity
 
         [Test]

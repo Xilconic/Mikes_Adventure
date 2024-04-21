@@ -10,6 +10,10 @@ namespace Assets.Characters.Player
 {
     public class PlayerStateMachine
     {
+        /// <seealso cref="PlayerController.JumpBuffer">
+        private const float JumpBuffer = 0.1f;
+        private float _jumpBufferCooldown = 0;
+
         private Vector2 _movementInput;
 
         public ITime Time { get; set; } = new UnityTime();
@@ -25,6 +29,10 @@ namespace Assets.Characters.Player
                 CurrentState.OnEnter();
                 state.Jump();
             }
+            else
+            {
+                _jumpBufferCooldown = JumpBuffer;
+            }
         }
 
         public void NotifyTouchingDirections(ITouchingDirections touchingDirections)
@@ -39,7 +47,15 @@ namespace Assets.Characters.Player
                 var groundedState = new GroundedState();
                 CurrentState = groundedState;
                 CurrentState.OnEnter();
-                CurrentState.SetMovement(_movementInput);
+                if (_jumpBufferCooldown > 0)
+                {
+                    Jump();
+                }
+                else
+                {
+                    CurrentState.SetMovement(_movementInput);
+                }
+                
             }
 
             if (CurrentState is GroundedState groundState)
@@ -61,6 +77,11 @@ namespace Assets.Characters.Player
         public void Update()
         {
             CurrentState.Update();
+
+            if(_jumpBufferCooldown > 0)
+            {
+                _jumpBufferCooldown -= Time.DeltaTime;
+            }
         }
     }
 }
