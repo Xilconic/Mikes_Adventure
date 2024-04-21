@@ -13,13 +13,28 @@ public class PlayerStateMachineTests
     protected TimeMock _timeMock;
 
     [SetUp]
-    public virtual void SetUp()
+    public void SetUp()
     {
         _timeMock = new TimeMock();
         _sut = new PlayerStateMachine()
         {
             Time = _timeMock,
         };
+
+        AdditionalSetUp();
+
+        AssertInitialStateConditions();
+    }
+
+    protected virtual void AdditionalSetUp()
+    {
+
+    }
+
+    protected virtual void AssertInitialStateConditions()
+    {
+        Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
+        Assert.IsInstanceOf<IdleState>(_sut.ActiveChildState);
     }
 
     public class GivenNewInstance : PlayerStateMachineTests
@@ -40,13 +55,6 @@ public class PlayerStateMachineTests
 
     public class GivenActiveChildStateIsIdleState : PlayerStateMachineTests
     {
-        public override void SetUp()
-        {
-            base.SetUp();
-
-            Assert.IsInstanceOf<IdleState>(_sut.ActiveChildState);
-        }
-
         [Test]
         public void WhenSettingZeroMovementInput_ThenCurrentStateIsGroundedStateAndActiveChildStateIsIdleState()
         {
@@ -143,8 +151,7 @@ public class PlayerStateMachineTests
             };
             _sut.NotifyTouchingDirections(touchingDirections);
 
-            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
-            Assert.IsInstanceOf<IdleState>(_sut.ActiveChildState);
+            AssertInitialStateConditions();
         }
 
         [Test]
@@ -172,13 +179,18 @@ public class PlayerStateMachineTests
 
     public class GivenActiveChildStateIsGroundMovementState : PlayerStateMachineTests
     {
-        public override void SetUp()
+        protected override void AdditionalSetUp()
         {
-            base.SetUp();
+            base.AdditionalSetUp();
 
             var movementInput = Vector2.left;
 
             _sut.SetMovement(movementInput);
+        }
+
+        protected override void AssertInitialStateConditions()
+        {
+            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
             Assert.IsInstanceOf<GroundMovementState>(_sut.ActiveChildState);
         }
 
@@ -268,8 +280,7 @@ public class PlayerStateMachineTests
             };
             _sut.NotifyTouchingDirections(touchingDirections);
 
-            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
-            Assert.IsInstanceOf<GroundMovementState>(_sut.ActiveChildState);
+            AssertInitialStateConditions();
         }
 
         [Test]
@@ -297,13 +308,18 @@ public class PlayerStateMachineTests
 
     public class GivenActiveChildStateIsCrouchIdelState : PlayerStateMachineTests
     {
-        public override void SetUp()
+        protected override void AdditionalSetUp()
         {
-            base.SetUp();
+            base.AdditionalSetUp();
 
             var movementInput = Vector2.down;
 
             _sut.SetMovement(movementInput);
+        }
+
+        protected override void AssertInitialStateConditions()
+        {
+            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
             Assert.IsInstanceOf<CrouchIdleState>(_sut.ActiveChildState);
         }
 
@@ -393,8 +409,7 @@ public class PlayerStateMachineTests
             };
             _sut.NotifyTouchingDirections(touchingDirections);
 
-            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
-            Assert.IsInstanceOf<CrouchIdleState>(_sut.ActiveChildState);
+            AssertInitialStateConditions();
         }
 
         [Test]
@@ -430,20 +445,24 @@ public class PlayerStateMachineTests
 
             _sut.Jump();
 
-            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
-            Assert.IsInstanceOf<CrouchIdleState>(_sut.ActiveChildState);
+            AssertInitialStateConditions();
         }
     }
 
     public class GivenActiveChildStateIsCrouchMovementState : PlayerStateMachineTests
     {
-        public override void SetUp()
+        protected override void AdditionalSetUp()
         {
-            base.SetUp();
+            base.AdditionalSetUp();
 
             var movementInput = new Vector2(0.707f, -0.707f); // 45 degrees down right
 
             _sut.SetMovement(movementInput);
+        }
+
+        protected override void AssertInitialStateConditions()
+        {
+            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
             Assert.IsInstanceOf<CrouchMovementState>(_sut.ActiveChildState);
         }
 
@@ -533,8 +552,7 @@ public class PlayerStateMachineTests
             };
             _sut.NotifyTouchingDirections(touchingDirections);
 
-            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
-            Assert.IsInstanceOf<CrouchMovementState>(_sut.ActiveChildState);
+            AssertInitialStateConditions();
         }
 
         [Test]
@@ -570,23 +588,26 @@ public class PlayerStateMachineTests
 
             _sut.Jump();
 
-            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
-            Assert.IsInstanceOf<CrouchMovementState>(_sut.ActiveChildState);
+            AssertInitialStateConditions();
         }
     }
 
     public class GivenActiveChildStateIsFallingState : PlayerStateMachineTests
     {
-        public override void SetUp()
+        protected override void AdditionalSetUp()
         {
-            base.SetUp();
+            base.AdditionalSetUp();
 
             var touchingDirections = new TouchingDirectionsStub
             {
                 IsGrounded = false,
             };
             _sut.NotifyTouchingDirections(touchingDirections);
+        }
 
+        protected override void AssertInitialStateConditions()
+        {
+            Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
             Assert.IsInstanceOf<FallingState>(_sut.ActiveChildState);
         }
 
@@ -729,8 +750,7 @@ public class PlayerStateMachineTests
 
             _sut.Jump();
 
-            Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
-            Assert.IsInstanceOf<FallingState>(_sut.ActiveChildState);
+            AssertInitialStateConditions();
         }
 
         [Test]
@@ -748,8 +768,7 @@ public class PlayerStateMachineTests
 
             _sut.Jump();
 
-            Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
-            Assert.IsInstanceOf<FallingState>(_sut.ActiveChildState);
+            AssertInitialStateConditions();
         }
 
         // TODO: Jump input buffer: Jump, wait small time, Hit ground => Go into Jump State
@@ -758,12 +777,16 @@ public class PlayerStateMachineTests
 
     public class GivenActiveChildStateIsJumpState : PlayerStateMachineTests
     {
-        public override void SetUp()
+        protected override void AdditionalSetUp()
         {
-            base.SetUp();
+            base.AdditionalSetUp();
 
             _sut.Jump();
+        }
 
+        protected override void AssertInitialStateConditions()
+        {
+            Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
             Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
         }
 
