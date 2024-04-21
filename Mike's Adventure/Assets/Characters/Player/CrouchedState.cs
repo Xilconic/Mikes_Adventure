@@ -7,44 +7,33 @@ using UnityEngine;
 
 namespace Assets.Characters.Player
 {
-    internal class CrouchedState : IState
+    internal class CrouchedState : SuperState
     {
         /// <seealso cref="PlayerController.CrouchLateralInputDeadZone"/>
         private const float CrouchLateralInputDeadZone = 0.1f;
-
         private ITouchingDirections _touchingDirections;
 
-        public IState CurrentState { get; private set; } = new CrouchIdleState();
-        public IState ActiveChildState => CurrentState.ActiveChildState;
+        public CrouchedState() : base(new CrouchIdleState())
+        {
+            
+        }
 
         private bool IsTouchingCeiling => (!_touchingDirections?.IsOnCeiling) ?? true;
 
-        public bool CanJump => CurrentState.CanJump && IsTouchingCeiling;
+        public override bool CanJump => base.CanJump && IsTouchingCeiling;
 
-        public void OnEnter()
-        {
-            CurrentState.OnEnter();
-        }
-
-        public void Update()
-        {
-            CurrentState.Update();
-        }
-
-        public void SetMovement(Vector2 movementInput)
+        public override void SetMovement(Vector2 movementInput)
         {
             if (Mathf.Abs(movementInput.x) > CrouchLateralInputDeadZone)
             {
-                CurrentState = new CrouchMovementState();
-                CurrentState.OnEnter();
+                ChangeCurrentState(new CrouchMovementState());
             }
             else
             {
-                CurrentState = new CrouchIdleState();
-                CurrentState.OnEnter();
+                ChangeCurrentState(new CrouchIdleState());
             }
 
-            CurrentState.SetMovement(movementInput);
+            base.SetMovement(movementInput);
         }
 
         public void NotifyTouchingDirections(ITouchingDirections touchingDirections)

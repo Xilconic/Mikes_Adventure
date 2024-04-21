@@ -7,40 +7,28 @@ using System.Threading.Tasks;
 
 namespace Assets.Characters.Player
 {
-    public class GroundedState : IState
+    public class GroundedState : SuperState
     {
         /// <seealso cref="PlayerController.CrouchInputZone"/>
         private const float CrouchVerticalInputThreshold = -0.5f;
 
-        public IState CurrentState { get; private set; } = new StandingState();
-        public IState ActiveChildState => CurrentState.ActiveChildState;
-
-        public bool CanJump => CurrentState.CanJump;
-
-        public void OnEnter()
+        public GroundedState() : base(new StandingState())
         {
-            CurrentState.OnEnter();
+            
         }
 
-        public void Update()
-        {
-            CurrentState.Update();
-        }
-
-        public void SetMovement(Vector2 movementInput)
+        public override void SetMovement(Vector2 movementInput)
         {
             if (movementInput.y <= CrouchVerticalInputThreshold)
             {
-                CurrentState = new CrouchedState();
-                CurrentState.OnEnter();
+                ChangeCurrentState(new CrouchedState());
             }
             else
             {
-                CurrentState = new StandingState();
-                CurrentState.OnEnter();
+                ChangeCurrentState(new StandingState());
             }
 
-            CurrentState.SetMovement(movementInput);
+            base.SetMovement(movementInput);
         }
 
         public void NotifyTouchingDirections(ITouchingDirections touchingDirections)
