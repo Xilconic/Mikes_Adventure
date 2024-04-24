@@ -58,6 +58,8 @@ public class PlayerStateMachineTests
 
     public class GivenActiveChildStateIsIdleState : PlayerStateMachineTests
     {
+        // TODO: Set animation state to Idle
+
         [Test]
         [TestCase(1f)]
         [TestCase(-1f)]
@@ -210,6 +212,8 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<GroundMovementState>(_sut.ActiveChildState);
         }
 
+        // TODO: Set animation state to Walk or Jog, depending on speed
+
         [Test]
         [TestCase(1f, 10.0f)]
         [TestCase(0.1f, 1.0f)]
@@ -359,6 +363,8 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
             Assert.IsInstanceOf<CrouchIdleState>(_sut.ActiveChildState);
         }
+        
+        // TODO: Set animation state to crouch idle
 
         [Test]
         public void WhenSettingSignificantDownMovementAndWithInsignificantLateralMovementAndRigidBodyHasVelocityOnX_WhenFixedUpdate_ThenRigidBodyHasVelocityZeroOnX(
@@ -518,6 +524,8 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
             Assert.IsInstanceOf<CrouchMovementState>(_sut.ActiveChildState);
         }
+
+        // TODO: Set animation state to crouch walk
 
         [Test]
         [TestCase(0.11f, -0.5f, 0.33f)]
@@ -682,6 +690,8 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
             Assert.IsInstanceOf<FallingState>(_sut.ActiveChildState);
         }
+        
+        // TODO: Set animation state to falling
 
         [Test]
         [TestCase(1.0f, 0.0f, 0.01f, 10.0f)]
@@ -930,6 +940,8 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
         }
 
+        // TODO: Set animation state to Jump
+
         [Test]
         public void ThenRigidBodyHasVelocityY()
         {
@@ -1110,4 +1122,7 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<CrouchMovementState>(_sut.ActiveChildState);
         }
     }
+
+    // TODO: Implement WallSlide state and transitions and effects
+    // TODO: Implement WallJump state and transitions and effects
 }

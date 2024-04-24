@@ -10,6 +10,7 @@ using UnityEngine.Playables;
 [RequireComponent(typeof(TouchingDirections))]
 public class PlayerController : MonoBehaviour
 {
+    // TODO: Integrate PlayerStateMachine into this controller
     private Rigidbody2D _rb;
     private Animator _animator;
     private TouchingDirections _touchingDirections;
