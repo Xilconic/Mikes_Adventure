@@ -12,6 +12,9 @@ namespace Assets.Characters.Player
         /// <seealso cref="PlayerController.MaxRunSpeed"/> 
         private const float MaxRunSpeed = 10.0f; // TODO: Make configurable from Inspector; And ensure keep consistent with GroundedMovementState
 
+        /// <seealso cref="PlayerController.JumpImpulse"/>
+        private const float JumpImpulse = 10f; // TODO: Make configurable from Inspector
+
         private readonly Rigidbody2D _rigidbody;
 
         private Vector2 _movementInput;
@@ -29,7 +32,7 @@ namespace Assets.Characters.Player
 
         public void OnEnter()
         {
-            
+            _rigidbody.AdjustVelocityY(JumpImpulse);
         }
 
         public void Update()

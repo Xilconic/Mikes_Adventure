@@ -931,9 +931,26 @@ public class PlayerStateMachineTests
         }
 
         // TODO: Fixed Update where velocity.y < 0 => Transition into falling
-        // TODO: Jumping one-time sets RigidBody2D Y-Velocity
-        // TODO: Jumping does not again set y velocity
         // TODO: Release Jump: Half vertical velocity
+
+        [Test]
+        public void ThenRigidBodyHasVelocityY()
+        {
+            Assert.AreEqual(10.0f, _rigidBody2D.velocity.y);
+        }
+
+        [Test]
+        public void AndUpwardVelocityHasDecreasedDuePassageOfTime_WhenJumping_ThenRigidBodyVelocityYUnchanged()
+        {
+            _rigidBody2D.velocity = new Vector2(0, 5.0f);
+            _timeMock.DeltaTime = 0.1f;
+            _sut.FixedUpdate();
+
+            _sut.Jump();
+
+            Assert.AreEqual(5.0f, _rigidBody2D.velocity.y);
+            AssertInitialStateConditions();
+        }
 
         [Test]
         [TestCase(1.0f, 0.0f, 10.0f)]
@@ -943,7 +960,7 @@ public class PlayerStateMachineTests
         [TestCase(-0.01f, 0.707f, -0.1f)]
         [TestCase(-0.707f, 0.707f, -7.07f)]
         [TestCase(-1.0f, 0.0f, -10.0f)]
-        public void WhenSettingMovementAndRigidBodyHasZeroVelocityOnX_WhenFixedUpdate_ThenRigidBodyHasVelocityOnX(
+        public void AndSettingMovementAndRigidBodyHasZeroVelocityOnX_WhenFixedUpdate_ThenRigidBodyHasVelocityOnX(
             float xValue, float yValue, float expectedVelocityX)
         {
             float originalVelocityY = _rigidBody2D.velocity.y;
