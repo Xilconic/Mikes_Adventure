@@ -49,5 +49,10 @@ namespace Assets.Characters.Player
         {
             _movementInput = movementInput;
         }
+
+        internal void JumpRelease()
+        {
+            _rigidbody.AdjustVelocityY(_rigidbody.velocity.y * 0.5f);
+        }
     }
 }

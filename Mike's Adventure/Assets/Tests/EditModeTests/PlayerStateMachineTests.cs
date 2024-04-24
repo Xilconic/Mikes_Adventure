@@ -930,9 +930,6 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
         }
 
-        // TODO: Fixed Update where velocity.y < 0 => Transition into falling
-        // TODO: Release Jump: Half vertical velocity
-
         [Test]
         public void ThenRigidBodyHasVelocityY()
         {
@@ -950,6 +947,54 @@ public class PlayerStateMachineTests
 
             Assert.AreEqual(5.0f, _rigidBody2D.velocity.y);
             AssertInitialStateConditions();
+        }
+
+        [Test]
+        [TestCase(0.0f)]
+        [TestCase(-1.0f)]
+        public void AndUpwardVelocityBecameDownOrNegativeDuePassageofTime_WhenFixedUpdate_ThenCurrentStateIsAirialStateAndActiveChildStateIsFallingState(
+            float newVelocityY)
+        {
+            _rigidBody2D.velocity = new Vector2(0, newVelocityY);
+            _timeMock.DeltaTime = 0.1f;
+            _sut.FixedUpdate();
+
+            Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
+            Assert.IsInstanceOf<FallingState>(_sut.ActiveChildState);
+        }
+
+        [Test]
+        [TestCase(9.0f, 4.5f)]
+        [TestCase(0.1f, 0.05f)]
+        public void AndUpwardVelocityHasDecreasedDuePassageofTime_WhenReleasingJump_ThenRigidBodyVelocityYHalved(
+            float velocityY, float expectedVelocityY)
+        {
+            _rigidBody2D.velocity = new Vector2(0, velocityY);
+            _timeMock.DeltaTime = 0.1f;
+            _sut.FixedUpdate();
+
+            _sut.JumpRelease();
+
+            Assert.AreEqual(expectedVelocityY, _rigidBody2D.velocity.y, 0.001f);
+            Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
+            Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
+        }
+
+        [Test]
+        [TestCase(0.0f)]
+        [TestCase(-1.0f)]
+        public void AndUpwardVelocityBecameDownOrNegativeDuePassageofTime_WhenReleasingJump_ThenRigidBodyVelocityYUnchanged(
+            float newVelocityY)
+        {
+            _rigidBody2D.velocity = new Vector2(0, newVelocityY);
+            _timeMock.DeltaTime = 0.1f;
+            _sut.FixedUpdate();
+
+            _sut.JumpRelease();
+
+            Assert.AreEqual(newVelocityY, _rigidBody2D.velocity.y, 0.001f);
+            Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
+            Assert.IsInstanceOf<FallingState>(_sut.ActiveChildState);
         }
 
         [Test]

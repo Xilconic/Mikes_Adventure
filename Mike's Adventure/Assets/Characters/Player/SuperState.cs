@@ -37,7 +37,7 @@ namespace Assets.Characters.Player
             CurrentState.Update();
         }
 
-        public void FixedUpdate()
+        public virtual void FixedUpdate()
         {
             CurrentState.FixedUpdate();
         }

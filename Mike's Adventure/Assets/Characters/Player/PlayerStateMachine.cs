@@ -43,6 +43,14 @@ namespace Assets.Characters.Player
             }
         }
 
+        public void JumpRelease()
+        {
+            if(CurrentState is AirialState airialState)
+            {
+                airialState.JumpRelease();
+            }
+        }
+
         public void NotifyTouchingDirections(ITouchingDirections touchingDirections)
         {
             if (!touchingDirections.IsGrounded && CurrentState is GroundedState)
