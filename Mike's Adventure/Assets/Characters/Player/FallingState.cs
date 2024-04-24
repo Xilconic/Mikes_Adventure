@@ -18,17 +18,20 @@ namespace Assets.Characters.Player
 
         private readonly ITime _time;
         private readonly Rigidbody2D _rigidbody;
+        private readonly IAnimator _animator;
 
         private Vector2 _movementInput;
         
 
         public FallingState(
             Rigidbody2D rigidbody,
+            IAnimator animator,
             ITime time)
         {
             ActiveChildState = this;
             _time = time;
             _rigidbody = rigidbody;
+            _animator = animator;
         }
 
         public IState ActiveChildState { get; }
@@ -51,6 +54,7 @@ namespace Assets.Characters.Player
             {
                 _coyoteTimeCooldown -= _time.DeltaTime;
             }
+            _animator.Play(AnimationClipNames.Falling);
         }
 
         public void FixedUpdate()

@@ -11,11 +11,14 @@ namespace Assets.Characters.Player
     public class AirialState : SuperState
     {
         private readonly Rigidbody2D _rigidbody2;
+        private readonly IAnimator _animator;
         private readonly ITime _time;
 
-        public AirialState(Rigidbody2D rigidbody, ITime time) : base(new FallingState(rigidbody, time))
+        public AirialState(Rigidbody2D rigidbody, IAnimator animator, ITime time) : 
+            base(new FallingState(rigidbody, animator, time))
         {
             _rigidbody2 = rigidbody;
+            _animator = animator;
             _time = time;
         }
 
@@ -23,7 +26,7 @@ namespace Assets.Characters.Player
         {
             if(CurrentState.CanJump)
             {
-                ChangeCurrentState(new JumpState(_rigidbody2));
+                ChangeCurrentState(new JumpState(_rigidbody2, _animator));
             }
         }
 
@@ -39,7 +42,7 @@ namespace Assets.Characters.Player
         {
             if(_rigidbody2.velocity.y <= 0)
             {
-                ChangeCurrentState(new FallingState(_rigidbody2, _time));
+                ChangeCurrentState(new FallingState(_rigidbody2, _animator, _time));
             }
             base.FixedUpdate();
         }

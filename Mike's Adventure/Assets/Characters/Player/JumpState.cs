@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Assets.GeneralScripts;
 using UnityEngine;
 
 namespace Assets.Characters.Player
@@ -16,12 +17,14 @@ namespace Assets.Characters.Player
         private const float JumpImpulse = 10f; // TODO: Make configurable from Inspector
 
         private readonly Rigidbody2D _rigidbody;
+        private readonly IAnimator _animator;
 
         private Vector2 _movementInput;
 
-        public JumpState(Rigidbody2D rigidbody)
+        public JumpState(Rigidbody2D rigidbody, IAnimator animator)
         {
             _rigidbody = rigidbody;
+            _animator = animator;
 
             ActiveChildState = this;
         }
@@ -37,7 +40,7 @@ namespace Assets.Characters.Player
 
         public void Update()
         {
-            
+            _animator.Play(AnimationClipNames.Jump);
         }
 
         public void FixedUpdate()

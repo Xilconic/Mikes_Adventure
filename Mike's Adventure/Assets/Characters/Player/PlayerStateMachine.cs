@@ -13,14 +13,18 @@ namespace Assets.Characters.Player
         /// <seealso cref="PlayerController.JumpBuffer">
         private const float JumpBuffer = 0.1f;
         private readonly Rigidbody2D _rigidbody;
+        private readonly IAnimator _animator;
         private float _jumpBufferCooldown = 0;
 
         private Vector2 _movementInput;
 
-        public PlayerStateMachine(Rigidbody2D rigidbody)
+        public PlayerStateMachine(
+            Rigidbody2D rigidbody,
+            IAnimator animator)
         {
             _rigidbody = rigidbody;
-            CurrentState = new GroundedState(_rigidbody);
+            _animator = animator;
+            CurrentState = new GroundedState(_rigidbody, _animator);
         }
 
         public ITime Time { get; set; } = new UnityTime();
@@ -32,7 +36,7 @@ namespace Assets.Characters.Player
         {
             if (CurrentState.CanJump)
             {
-                var state = new AirialState(_rigidbody, Time);
+                var state = new AirialState(_rigidbody, _animator, Time);
                 CurrentState = state;
                 CurrentState.OnEnter();
                 state.Jump();
@@ -55,12 +59,12 @@ namespace Assets.Characters.Player
         {
             if (!touchingDirections.IsGrounded && CurrentState is GroundedState)
             {
-                CurrentState = new AirialState(_rigidbody, Time);
+                CurrentState = new AirialState(_rigidbody, _animator, Time);
                 CurrentState.OnEnter();
             }
             else if (touchingDirections.IsGrounded && CurrentState is AirialState)
             {
-                var groundedState = new GroundedState(_rigidbody);
+                var groundedState = new GroundedState(_rigidbody, _animator);
                 CurrentState = groundedState;
                 CurrentState.OnEnter();
                 if (_jumpBufferCooldown > 0)

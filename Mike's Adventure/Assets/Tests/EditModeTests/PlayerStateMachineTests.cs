@@ -6,20 +6,25 @@ using UnityEngine.TestTools;
 using Assets.Characters.Player;
 using Assets.Tests;
 using Assets.Tests.EditModeTests;
+using Assets.GeneralScripts;
+using UnityEngine.PlayerLoop;
 
 public class PlayerStateMachineTests
 {
+    protected GameObject _gameObject;
     protected Rigidbody2D _rigidBody2D;
     protected PlayerStateMachine _sut;
     protected TimeMock _timeMock;
+    protected AnimatorMock _animator;
 
     [SetUp]
     public void SetUp()
     {
-        var gameObject = new GameObject();
-        _rigidBody2D = gameObject.AddComponent<Rigidbody2D>();
+        _gameObject = new GameObject();
+        _rigidBody2D = _gameObject.AddComponent<Rigidbody2D>();
         _timeMock = new TimeMock();
-        _sut = new PlayerStateMachine(_rigidBody2D)
+        _animator = new AnimatorMock();
+        _sut = new PlayerStateMachine(_rigidBody2D, _animator)
         {
             Time = _timeMock,
         };
@@ -27,6 +32,12 @@ public class PlayerStateMachineTests
         AdditionalSetUp();
 
         AssertInitialStateConditions();
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        GameObject.DestroyImmediate(_gameObject);
     }
 
     protected virtual void AdditionalSetUp()
@@ -58,7 +69,13 @@ public class PlayerStateMachineTests
 
     public class GivenActiveChildStateIsIdleState : PlayerStateMachineTests
     {
-        // TODO: Set animation state to Idle
+        [Test]
+        public void WhenUpdate_ThenAnimationIsSetToMikeIdle()
+        {
+            _sut.Update();
+
+            Assert.AreEqual(AnimationClipNames.Idle, _animator.CurrentPlayingAnimationClip);
+        }
 
         [Test]
         [TestCase(1f)]
@@ -212,7 +229,37 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<GroundMovementState>(_sut.ActiveChildState);
         }
 
-        // TODO: Set animation state to Walk or Jog, depending on speed
+        [Test]
+        [TestCase(0.5f)]
+        [TestCase(0.01f)]
+        [TestCase(-0.01f)]
+        [TestCase(-0.5f)]
+        public void AndMovementSpeedIsLessThanOrEqualsToWalkingTheshold_WhenUpdate_ThenAnimationIsSetToMikeWalk(
+            float movementInputX)
+        {
+            _sut.SetMovement(new Vector2(movementInputX, 0f));
+            _sut.FixedUpdate();
+
+            _sut.Update();
+
+            Assert.AreEqual(AnimationClipNames.Walk, _animator.CurrentPlayingAnimationClip);
+        }
+
+        [Test]
+        [TestCase(1.0f)]
+        [TestCase(0.51f)]
+        [TestCase(-0.51f)]
+        [TestCase(-1.0f)]
+        public void AndMovementSpeedIsGreaterThanWalkingTheshold_WhenUpdate_ThenAnimationIsSetToMikeJog(
+            float movementInputX)
+        {
+            _sut.SetMovement(new Vector2(movementInputX, 0f));
+            _sut.FixedUpdate();
+
+            _sut.Update();
+
+            Assert.AreEqual(AnimationClipNames.Jog, _animator.CurrentPlayingAnimationClip);
+        }
 
         [Test]
         [TestCase(1f, 10.0f)]
@@ -363,8 +410,14 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
             Assert.IsInstanceOf<CrouchIdleState>(_sut.ActiveChildState);
         }
-        
-        // TODO: Set animation state to crouch idle
+
+        [Test]
+        public void WhenUpdate_ThenAnimationIsSetToMikeWalk()
+        {
+            _sut.Update();
+
+            Assert.AreEqual(AnimationClipNames.CrouchIdle, _animator.CurrentPlayingAnimationClip);
+        }
 
         [Test]
         public void WhenSettingSignificantDownMovementAndWithInsignificantLateralMovementAndRigidBodyHasVelocityOnX_WhenFixedUpdate_ThenRigidBodyHasVelocityZeroOnX(
@@ -525,7 +578,13 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<CrouchMovementState>(_sut.ActiveChildState);
         }
 
-        // TODO: Set animation state to crouch walk
+        [Test]
+        public void WhenUpdate_ThenAnimationIsSetToMikeWalk()
+        {
+            _sut.Update();
+
+            Assert.AreEqual(AnimationClipNames.CrouchWalk, _animator.CurrentPlayingAnimationClip);
+        }
 
         [Test]
         [TestCase(0.11f, -0.5f, 0.33f)]
@@ -690,8 +749,14 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
             Assert.IsInstanceOf<FallingState>(_sut.ActiveChildState);
         }
-        
-        // TODO: Set animation state to falling
+
+        [Test]
+        public void WhenUpdate_ThenAnimationIsSetToMikeWalk()
+        {
+            _sut.Update();
+
+            Assert.AreEqual(AnimationClipNames.Falling, _animator.CurrentPlayingAnimationClip);
+        }
 
         [Test]
         [TestCase(1.0f, 0.0f, 0.01f, 10.0f)]
@@ -940,7 +1005,13 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
         }
 
-        // TODO: Set animation state to Jump
+        [Test]
+        public void WhenUpdate_ThenAnimationIsSetToMikeWalk()
+        {
+            _sut.Update();
+
+            Assert.AreEqual(AnimationClipNames.Jump, _animator.CurrentPlayingAnimationClip);
+        }
 
         [Test]
         public void ThenRigidBodyHasVelocityY()

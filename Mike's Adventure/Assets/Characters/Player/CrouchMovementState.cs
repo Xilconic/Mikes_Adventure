@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Assets.GeneralScripts;
 using UnityEngine;
 
 namespace Assets.Characters.Player
@@ -12,11 +13,13 @@ namespace Assets.Characters.Player
         /// <seealso cref="PlayerController.MaxChrouchWalkSpeed"/>
         private const float MaxRunSpeed = 3.0f; // TODO: Make configurable from inspector
         private readonly Rigidbody2D _rigidbody;
+        private readonly IAnimator _animator;
         private Vector2 _movementInput;
 
-        public CrouchMovementState(Rigidbody2D rigidbody)
+        public CrouchMovementState(Rigidbody2D rigidbody, IAnimator animator)
         {
             _rigidbody = rigidbody;
+            _animator = animator;
 
             ActiveChildState = this;
         }
@@ -32,7 +35,7 @@ namespace Assets.Characters.Player
 
         public void Update()
         {
-            
+            _animator.Play(AnimationClipNames.CrouchWalk);
         }
 
         public void FixedUpdate()
