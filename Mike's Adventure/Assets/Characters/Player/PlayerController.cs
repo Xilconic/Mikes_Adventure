@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Assets.Characters.Player;
+using Assets.GeneralScripts;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Playables;
@@ -10,7 +12,7 @@ using UnityEngine.Playables;
 [RequireComponent(typeof(TouchingDirections))]
 public class PlayerController : MonoBehaviour
 {
-    // TODO: Integrate PlayerStateMachine into this controller
+    // TODO: Clean up unused code due to integration of PlayerStateMachine
     private Rigidbody2D _rb;
     private Animator _animator;
     private TouchingDirections _touchingDirections;
@@ -19,6 +21,8 @@ public class PlayerController : MonoBehaviour
     [SerializeField, ReadOnlyField]
     private Vector2 _normalizedMovementInput = Vector2.zero;
     private string _currentAnimationClipName;
+
+    private PlayerStateMachine _playerStateMachine;
 
     private bool _isFacingRight = true;
     private bool IsFacingRight
@@ -104,109 +108,113 @@ public class PlayerController : MonoBehaviour
         Debug.Assert(-1f <= CrouchInputZone && CrouchInputZone <= 0.0f, "'CrouchInputZone' must be in range [-1.0, 0.0]!");
         Debug.Assert(CrouchLateralInputDeadZone >= 0, "'CrouchLateralInputDeadZone' must be greater than 0!");
         Debug.Assert(MaxWallSlideVelocity <= 0, "'MaxWallSlideVelocity' must be less than or equal to 0!");
+
+        _playerStateMachine = new PlayerStateMachine(_rb, new UnityAnimator(_animator));
     }
 
     private void Start()
     {
-        ChangeAnimationState(AnimationClipNames.Idle);
+        //ChangeAnimationState(AnimationClipNames.Idle);
     }
 
     private void Update()
     {
-        _jumpInputCooldown = Mathf.Max(0, _jumpInputCooldown - Time.deltaTime);
-        _coyoteTimeCooldown = Mathf.Max(-1, _coyoteTimeCooldown - Time.deltaTime);
+        _playerStateMachine.Update();
+        //_jumpInputCooldown = Mathf.Max(0, _jumpInputCooldown - Time.deltaTime);
+        //_coyoteTimeCooldown = Mathf.Max(-1, _coyoteTimeCooldown - Time.deltaTime);
     }
 
     private void FixedUpdate()
     {
-        if (_touchingDirections.IsGrounded)
-        {
-            _touchedGround = true;
+        _playerStateMachine.FixedUpdate();
+        //if (_touchingDirections.IsGrounded)
+        //{
+        //    _touchedGround = true;
 
-            if (HasJumpBeenTriggeredRecently && !_touchingDirections.IsOnCeiling)
-            {
-                _rb.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
-                PerformJump();
-            }
-            else if (IsRisingInAir)
-            {
-                // Keep using the 'Jump' animation clip while going up in the air
-                // TODO: What if we have effects that knock us up in the air? Enemy attacks, traps, bouncy pads? Then we should be setting a 'air rising' animation when not in the middle of the 'jump squat' animation.
-                _rb.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
-            }
-            else
-            {
-                if (_normalizedMovementInput.y < CrouchInputZone ||
-                    (PlayerState == State.Crouching && _touchingDirections.IsOnCeiling))
-                {
-                    PlayerState = State.Crouching;
-                    // Have a stable dead-zone for crouching to allow for standing still while crouched:
-                    if (Mathf.Abs(_movementInput.x) <= CrouchLateralInputDeadZone)
-                    {
-                        _rb.AdjustVelocityX(0);
-                        ChangeAnimationState(AnimationClipNames.CrouchIdle);
-                    }
-                    else
-                    {
-                        _rb.AdjustVelocityX(_movementInput.x * MaxChrouchWalkSpeed);
-                        ChangeAnimationState(AnimationClipNames.CrouchWalk);
-                    }
-                }
-                else
-                {
-                    PlayerState = State.Grounded;
-                    _rb.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
-                    if (Mathf.Abs(_rb.velocity.x) > MaxWalkSpeed)
-                    {
-                        ChangeAnimationState(AnimationClipNames.Jog);
-                    }
-                    else if (Mathf.Abs(_rb.velocity.x) > 1e-5)
-                    {
-                        ChangeAnimationState(AnimationClipNames.Walk);
-                    }
-                    else
-                    {
-                        ChangeAnimationState(AnimationClipNames.Idle);
-                    }
-                }
-            }
-        }
-        else
-        {
-            _rb.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
-            if(!IsRisingInAir)
-            {
-                _rb.gravityScale = FallingGravityScale;
-            }
+        //    if (HasJumpBeenTriggeredRecently && !_touchingDirections.IsOnCeiling)
+        //    {
+        //        _rb.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
+        //        PerformJump();
+        //    }
+        //    else if (IsRisingInAir)
+        //    {
+        //        // Keep using the 'Jump' animation clip while going up in the air
+        //        // TODO: What if we have effects that knock us up in the air? Enemy attacks, traps, bouncy pads? Then we should be setting a 'air rising' animation when not in the middle of the 'jump squat' animation.
+        //        _rb.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
+        //    }
+        //    else
+        //    {
+        //        if (_normalizedMovementInput.y < CrouchInputZone ||
+        //            (PlayerState == State.Crouching && _touchingDirections.IsOnCeiling))
+        //        {
+        //            PlayerState = State.Crouching;
+        //            // Have a stable dead-zone for crouching to allow for standing still while crouched:
+        //            if (Mathf.Abs(_movementInput.x) <= CrouchLateralInputDeadZone)
+        //            {
+        //                _rb.AdjustVelocityX(0);
+        //                ChangeAnimationState(AnimationClipNames.CrouchIdle);
+        //            }
+        //            else
+        //            {
+        //                _rb.AdjustVelocityX(_movementInput.x * MaxChrouchWalkSpeed);
+        //                ChangeAnimationState(AnimationClipNames.CrouchWalk);
+        //            }
+        //        }
+        //        else
+        //        {
+        //            PlayerState = State.Grounded;
+        //            _rb.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
+        //            if (Mathf.Abs(_rb.velocity.x) > MaxWalkSpeed)
+        //            {
+        //                ChangeAnimationState(AnimationClipNames.Jog);
+        //            }
+        //            else if (Mathf.Abs(_rb.velocity.x) > 1e-5)
+        //            {
+        //                ChangeAnimationState(AnimationClipNames.Walk);
+        //            }
+        //            else
+        //            {
+        //                ChangeAnimationState(AnimationClipNames.Idle);
+        //            }
+        //        }
+        //    }
+        //}
+        //else
+        //{
+        //    _rb.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
+        //    if(!IsRisingInAir)
+        //    {
+        //        _rb.gravityScale = FallingGravityScale;
+        //    }
 
-            if (_touchingDirections.IsOnWall && !IsRisingInAir)
-            {
-                PlayerState = State.InMidAir;
-                ChangeAnimationState(AnimationClipNames.WallSlide);
+        //    if (_touchingDirections.IsOnWall && !IsRisingInAir)
+        //    {
+        //        PlayerState = State.InMidAir;
+        //        ChangeAnimationState(AnimationClipNames.WallSlide);
 
-                _rb.AdjustVelocityY(MathF.Max(MaxWallSlideVelocity, _rb.velocity.y));
-            }
-            else
-            {
-                PlayerState = State.InMidAir;
-                // Went from touching the ground to no longer touching the ground:
-                if (_touchedGround)
-                {
-                    _coyoteTimeCooldown = CoyoteTimeBuffer;
-                }
-                else if (HasLeftPlatformRecently && HasJumpBeenTriggeredRecently)
-                {
-                    PerformJump();
-                }
+        //        _rb.AdjustVelocityY(MathF.Max(MaxWallSlideVelocity, _rb.velocity.y));
+        //    }
+        //    else
+        //    {
+        //        PlayerState = State.InMidAir;
+        //        // Went from touching the ground to no longer touching the ground:
+        //        if (_touchedGround)
+        //        {
+        //            _coyoteTimeCooldown = CoyoteTimeBuffer;
+        //        }
+        //        else if (HasLeftPlatformRecently && HasJumpBeenTriggeredRecently)
+        //        {
+        //            PerformJump();
+        //        }
 
-                if (!IsRisingInAir)
-                {
-                    ChangeAnimationState(AnimationClipNames.Falling);
-                }
-            }
+        //        if (!IsRisingInAir)
+        //        {
+        //            ChangeAnimationState(AnimationClipNames.Falling);
+        //        }
+        //    }
             
-            _touchedGround = false;
-        }
+        //    _touchedGround = false;
+        //}
     }
 
     private void PerformJump()
@@ -230,18 +238,24 @@ public class PlayerController : MonoBehaviour
         {
             IsFacingRight = false;
         }
+        _playerStateMachine.SetMovement(_movementInput);
     }
 
     public void OnJump(InputAction.CallbackContext context)
     {
         if(context.started)
         {
-            _jumpInputCooldown = JumpBuffer;
+            //_jumpInputCooldown = JumpBuffer;
+            _playerStateMachine.Jump();
         }
         // Allow for 'short hopping' on release:
-        if (context.canceled && IsRisingInAir)
+        if (context.canceled)
         {
-            _rb.AdjustVelocityY(_rb.velocity.y * 0.5f);
+            _playerStateMachine.JumpRelease();
+            //if (IsRisingInAir)
+            //{
+            //    _rb.AdjustVelocityY(_rb.velocity.y * 0.5f);
+            //}
         }
     }
 

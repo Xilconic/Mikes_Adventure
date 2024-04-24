@@ -12,7 +12,7 @@ namespace Assets.GeneralScripts
         void Play(string stateName);
     }
 
-    internal class UnityAnimator : IAnimator
+    public class UnityAnimator : IAnimator
     {
         private readonly Animator _animator;
         private string _currentStateName;
