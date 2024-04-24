@@ -10,16 +10,18 @@ namespace Assets.Characters.Player
 {
     public class AirialState : SuperState
     {
-        public AirialState(ITime time) : base(new FallingState(time))
-        {
+        private readonly Rigidbody2D _rigidbody2;
 
+        public AirialState(Rigidbody2D rigidbody, ITime time) : base(new FallingState(rigidbody, time))
+        {
+            _rigidbody2 = rigidbody;
         }
 
         internal void Jump()
         {
             if(CurrentState.CanJump)
             {
-                ChangeCurrentState(new JumpState());
+                ChangeCurrentState(new JumpState(_rigidbody2));
             }
         }
     }

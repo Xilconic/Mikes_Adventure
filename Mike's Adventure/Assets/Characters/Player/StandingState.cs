@@ -20,7 +20,7 @@ namespace Assets.Characters.Player
         {
             if (movementInput.x != 0)
             {
-                ChangeCurrentState(new GroundMovementState());
+                ChangeCurrentState(new GroundMovementState(_rigidbody));
             }
             else
             {

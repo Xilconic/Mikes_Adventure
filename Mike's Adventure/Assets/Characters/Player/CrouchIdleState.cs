@@ -9,8 +9,12 @@ namespace Assets.Characters.Player
 {
     public class CrouchIdleState : IState
     {
-        public CrouchIdleState()
+        private readonly Rigidbody2D _rigidbody;
+
+        public CrouchIdleState(Rigidbody2D rigidbody)
         {
+            _rigidbody = rigidbody;
+
             ActiveChildState = this;
         }
 
@@ -30,7 +34,7 @@ namespace Assets.Characters.Player
 
         public void FixedUpdate()
         {
-
+            _rigidbody.AdjustVelocityX(0);
         }
 
         public void SetMovement(Vector2 movementInput)

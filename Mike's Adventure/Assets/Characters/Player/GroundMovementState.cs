@@ -9,8 +9,15 @@ namespace Assets.Characters.Player
 {
     public class GroundMovementState : IState
     {
-        public GroundMovementState()
+        /// <seealso cref="PlayerController.MaxRunSpeed"/>
+        private const float MaxRunSpeed = 10.0f; // TODO: Make configurable from inspector
+        private readonly Rigidbody2D _rigidbody;
+        private Vector2 _movementInput;
+
+        public GroundMovementState(Rigidbody2D rigidbody)
         {
+            _rigidbody = rigidbody;
+
             ActiveChildState = this;
         }
 
@@ -30,12 +37,12 @@ namespace Assets.Characters.Player
 
         public void FixedUpdate()
         {
-
+            _rigidbody.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
         }
 
         public void SetMovement(Vector2 movementInput)
         {
-            // TOOD: Process input
+            _movementInput = movementInput;
         }
     }
 }

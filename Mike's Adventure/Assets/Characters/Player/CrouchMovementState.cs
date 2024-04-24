@@ -9,8 +9,15 @@ namespace Assets.Characters.Player
 {
     public class CrouchMovementState : IState
     {
-        public CrouchMovementState()
+        /// <seealso cref="PlayerController.MaxChrouchWalkSpeed"/>
+        private const float MaxRunSpeed = 3.0f; // TODO: Make configurable from inspector
+        private readonly Rigidbody2D _rigidbody;
+        private Vector2 _movementInput;
+
+        public CrouchMovementState(Rigidbody2D rigidbody)
         {
+            _rigidbody = rigidbody;
+
             ActiveChildState = this;
         }
 
@@ -30,12 +37,12 @@ namespace Assets.Characters.Player
 
         public void FixedUpdate()
         {
-
+            _rigidbody.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
         }
 
         public void SetMovement(Vector2 movementInput)
         {
-            // TODO: Process input somehow
+            _movementInput = movementInput;
         }
     }
 }

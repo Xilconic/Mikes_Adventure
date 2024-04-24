@@ -10,7 +10,7 @@ namespace Assets.Characters.Player
     public class GroundedState : SuperState
     {
         /// <seealso cref="PlayerController.CrouchInputZone"/>
-        private const float CrouchVerticalInputThreshold = -0.5f;
+        private const float CrouchVerticalInputThreshold = -0.5f; // TODO: Make configurable from Inspector
         private readonly Rigidbody2D _rigidbody;
 
         public GroundedState(Rigidbody2D rigidbody) : base(new StandingState(rigidbody))
@@ -22,7 +22,7 @@ namespace Assets.Characters.Player
         {
             if (movementInput.y <= CrouchVerticalInputThreshold)
             {
-                ChangeCurrentState(new CrouchedState());
+                ChangeCurrentState(new CrouchedState(_rigidbody));
             }
             else
             {

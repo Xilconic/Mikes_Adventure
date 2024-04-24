@@ -9,8 +9,17 @@ namespace Assets.Characters.Player
 {
     public class JumpState : IState
     {
-        public JumpState()
+        /// <seealso cref="PlayerController.MaxRunSpeed"/> 
+        private const float MaxRunSpeed = 10.0f; // TODO: Make configurable from Inspector; And ensure keep consistent with GroundedMovementState
+
+        private readonly Rigidbody2D _rigidbody;
+
+        private Vector2 _movementInput;
+
+        public JumpState(Rigidbody2D rigidbody)
         {
+            _rigidbody = rigidbody;
+
             ActiveChildState = this;
         }
 
@@ -30,12 +39,12 @@ namespace Assets.Characters.Player
 
         public void FixedUpdate()
         {
-
+            _rigidbody.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
         }
 
         public void SetMovement(Vector2 movementInput)
         {
-            // TODO: Do something with movement input
+            _movementInput = movementInput;
         }
     }
 }

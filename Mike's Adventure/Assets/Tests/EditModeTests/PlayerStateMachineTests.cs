@@ -210,7 +210,26 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<GroundMovementState>(_sut.ActiveChildState);
         }
 
-        //TODO: FixedUpdate => Set RigidBody2D X-Velocity as ratio of x-input
+        [Test]
+        [TestCase(1f, 10.0f)]
+        [TestCase(0.1f, 1.0f)]
+        [TestCase(0.01f, 0.1f)]
+        [TestCase(-0.01f, -0.1f)]
+        [TestCase(-0.1f, -1.0f)]
+        [TestCase(-1f, -10.0f)]
+        public void AndRigidBodyHasZeroVelocityOnXAndHorizontalMovementSet_WhenFixedUpdate_ThenRigidBodyHasVelocityOnX(
+            float inputX, float expectedVelocityX)
+        {
+            const float originalVelocityY = 0;
+            _rigidBody2D.velocity = new Vector2(0, originalVelocityY);
+
+            _sut.SetMovement(new Vector2(inputX, 0));
+
+            _sut.FixedUpdate();
+
+            Assert.AreEqual(expectedVelocityX, _rigidBody2D.velocity.x, 0.001f);
+            Assert.AreEqual(originalVelocityY, _rigidBody2D.velocity.y, 0.001f);
+        }
 
         [Test]
         public void WhenSettingZeroMovementInput_ThenCurrentStateIsGroundedStateAndActiveChildStateIsIdleState()
@@ -324,7 +343,7 @@ public class PlayerStateMachineTests
         }
     }
 
-    public class GivenActiveChildStateIsCrouchIdelState : PlayerStateMachineTests
+    public class GivenActiveChildStateIsCrouchIdleState : PlayerStateMachineTests
     {
         protected override void AdditionalSetUp()
         {
@@ -341,7 +360,21 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<CrouchIdleState>(_sut.ActiveChildState);
         }
 
-        //TODO: FixedUpdate => Set RigidBody2D X-Velocity 0 even with little horizontal input
+        [Test]
+        public void WhenSettingSignificantDownMovementAndWithInsignificantLateralMovementAndRigidBodyHasVelocityOnX_WhenFixedUpdate_ThenRigidBodyHasVelocityZeroOnX(
+            [Values(0f, 0.1f, -0.1f)] float xValue,
+            [Values(-0.5f, -.8f)] float yValue)
+        {
+            const float originalVelocityY = 0;
+            _rigidBody2D.velocity = new Vector2(1f, originalVelocityY);
+
+            _sut.SetMovement(new Vector2(xValue, yValue));
+
+            _sut.FixedUpdate();
+
+            Assert.AreEqual(0, _rigidBody2D.velocity.x);
+            Assert.AreEqual(originalVelocityY, _rigidBody2D.velocity.y);
+        }
 
         [Test]
         public void WhenSettingZeroMovementInput_ThenCurrentStateIsGroundedStateAndActiveChildStateIsIdleState()
@@ -486,7 +519,24 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<CrouchMovementState>(_sut.ActiveChildState);
         }
 
-        //TODO: FixedUpdate => Set RigidBody2D X-Velocity based on input (expected slower movement than standing)
+        [Test]
+        [TestCase(0.11f, -0.5f, 0.33f)]
+        [TestCase(0.707f, -.707f, 2.121f)]
+        [TestCase(-0.11f, -.707f, -0.33f)]
+        [TestCase(-.707f, -.707f, -2.121f)]
+        public void WhenSettingSignificantDownMovementAndWithSignificantLateralMovementAndRigidBodyHasZeroVelocityOnX_WhenFixedUpdate_ThenRigidBodyHasVelocityOnX(
+            float xValue, float yValue, float expectedVelocityX)
+        {
+            const float originalVelocityY = 0;
+            _rigidBody2D.velocity = new Vector2(0, originalVelocityY);
+
+            _sut.SetMovement(new Vector2(xValue, yValue));
+
+            _sut.FixedUpdate();
+
+            Assert.AreEqual(expectedVelocityX, _rigidBody2D.velocity.x, 0.001);
+            Assert.AreEqual(originalVelocityY, _rigidBody2D.velocity.y);
+        }
 
         [Test]
         public void WhenSettingZeroMovementInput_ThenCurrentStateIsGroundedStateAndActiveChildStateIsIdleState()
@@ -633,7 +683,26 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<FallingState>(_sut.ActiveChildState);
         }
 
-        //TODO: FixedUpdate => Set RigidBody2D X-Velocity based on input (Same are ground movement)
+        [Test]
+        [TestCase(1.0f, 0.0f, 0.01f, 10.0f)]
+        [TestCase(0.707f, 0.707f, 1.23f, 7.07f)]
+        [TestCase(0.01f, 0.707f, 1.23f, 0.1f)]
+        [TestCase(0.0f, 0.707f, 1.11f, 0f)]
+        [TestCase(-0.01f, 0.707f, 3.21f, -0.1f)]
+        [TestCase(-0.707f, 0.707f, 0.01f, -7.07f)]
+        [TestCase(-1.0f, 0.0f, 1.23f, -10.0f)]
+        public void WhenSettingMovementAndRigidBodyHasZeroVelocityOnX_WhenFixedUpdate_ThenRigidBodyHasVelocityOnX(
+            float xValue, float yValue, float originalVelocityY, float expectedVelocityX)
+        {
+            _rigidBody2D.velocity = new Vector2(0, originalVelocityY);
+
+            _sut.SetMovement(new Vector2(xValue, yValue));
+
+            _sut.FixedUpdate();
+
+            Assert.AreEqual(expectedVelocityX, _rigidBody2D.velocity.x, 0.001);
+            Assert.AreEqual(originalVelocityY, _rigidBody2D.velocity.y, 0.001);
+        }
 
         [Test]
         public void WhenStillFalling_ThenCurrentStateIsAirialStateAndActiveChildStateIsFallingState()
@@ -865,6 +934,28 @@ public class PlayerStateMachineTests
         // TODO: Jumping one-time sets RigidBody2D Y-Velocity
         // TODO: Jumping does not again set y velocity
         // TODO: Release Jump: Half vertical velocity
+
+        [Test]
+        [TestCase(1.0f, 0.0f, 10.0f)]
+        [TestCase(0.707f, 0.707f, 7.07f)]
+        [TestCase(0.01f, 0.707f, 0.1f)]
+        [TestCase(0.0f, 0.707f, 0f)]
+        [TestCase(-0.01f, 0.707f, -0.1f)]
+        [TestCase(-0.707f, 0.707f, -7.07f)]
+        [TestCase(-1.0f, 0.0f, -10.0f)]
+        public void WhenSettingMovementAndRigidBodyHasZeroVelocityOnX_WhenFixedUpdate_ThenRigidBodyHasVelocityOnX(
+            float xValue, float yValue, float expectedVelocityX)
+        {
+            float originalVelocityY = _rigidBody2D.velocity.y;
+            _rigidBody2D.velocity = new Vector2(0, originalVelocityY);
+
+            _sut.SetMovement(new Vector2(xValue, yValue));
+
+            _sut.FixedUpdate();
+
+            Assert.AreEqual(expectedVelocityX, _rigidBody2D.velocity.x, 0.001);
+            Assert.AreEqual(originalVelocityY, _rigidBody2D.velocity.y, 0.001);
+        }
 
         [Test]
         public void WhenStillInTheAir_ThenCurrentStateIsAirialStateAndActiveChildStateIsFallingState()

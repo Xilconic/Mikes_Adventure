@@ -32,7 +32,7 @@ namespace Assets.Characters.Player
         {
             if (CurrentState.CanJump)
             {
-                var state = new AirialState(Time);
+                var state = new AirialState(_rigidbody, Time);
                 CurrentState = state;
                 CurrentState.OnEnter();
                 state.Jump();
@@ -47,7 +47,7 @@ namespace Assets.Characters.Player
         {
             if (!touchingDirections.IsGrounded && CurrentState is GroundedState)
             {
-                CurrentState = new AirialState(Time);
+                CurrentState = new AirialState(_rigidbody, Time);
                 CurrentState.OnEnter();
             }
             else if (touchingDirections.IsGrounded && CurrentState is AirialState)
