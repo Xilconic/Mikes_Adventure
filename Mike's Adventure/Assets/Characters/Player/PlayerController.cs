@@ -126,6 +126,7 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        _playerStateMachine.NotifyTouchingDirections(_touchingDirections);
         _playerStateMachine.FixedUpdate();
         //if (_touchingDirections.IsGrounded)
         //{

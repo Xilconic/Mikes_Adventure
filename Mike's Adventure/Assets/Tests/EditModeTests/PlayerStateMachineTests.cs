@@ -18,9 +18,8 @@ public class PlayerStateMachineTests
     protected AnimatorMock _animator;
 
     // TODO: When player Jump -> Falling: player should have airial control but has none.
-    // TODO: When player Jump -> Falling -> Lands on ground: player should be in grounded state, but remains in Falling state.
+    // TODO: When player is in Falling state: Jump should not be possible unless coyote time is active.
     // TODO: When player crouhced under obstacle and touches ceiling: player should not be able to stand up, but actually can still (and gets stuck in terrain)
-    // TODO: When player crouched under obstacle and touches ceiling: player should not be able to jump, but actually can still (and gets kind of stuck in terrain)
 
     [SetUp]
     public void SetUp()
