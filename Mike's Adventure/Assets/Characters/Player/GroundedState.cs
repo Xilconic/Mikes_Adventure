@@ -14,6 +14,22 @@ namespace Assets.Characters.Player
         private const float CrouchVerticalInputThreshold = -0.5f; // TODO: Make configurable from Inspector
         private readonly Rigidbody2D _rigidbody;
         private readonly IAnimator _animator;
+        private ITouchingDirections _touchingDirections;
+
+        private bool IsTouchingCeiling
+        {
+            get
+            {
+                if (_touchingDirections != null)
+                {
+                    return _touchingDirections.IsOnCeiling;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+        }
 
         public GroundedState(
             Rigidbody2D rigidbody,
@@ -26,7 +42,8 @@ namespace Assets.Characters.Player
 
         public override void SetMovement(Vector2 movementInput)
         {
-            if (movementInput.y <= CrouchVerticalInputThreshold)
+            if (movementInput.y <= CrouchVerticalInputThreshold ||
+                (CurrentState is CrouchedState && IsTouchingCeiling))
             {
                 ChangeCurrentState(new CrouchedState(_rigidbody, _animator));
             }
@@ -40,6 +57,7 @@ namespace Assets.Characters.Player
 
         public void NotifyTouchingDirections(ITouchingDirections touchingDirections)
         {
+            _touchingDirections = touchingDirections;
             if (CurrentState is CrouchedState crouchedState)
             {
                 crouchedState.NotifyTouchingDirections(touchingDirections);

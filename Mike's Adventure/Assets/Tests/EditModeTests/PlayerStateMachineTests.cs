@@ -19,7 +19,7 @@ public class PlayerStateMachineTests
 
     // TODO: When player Jump -> Falling: player should have airial control but has none.
     // TODO: When player is in Falling state: Jump should not be possible unless coyote time is active.
-    // TODO: When player crouhced under obstacle and touches ceiling: player should not be able to stand up, but actually can still (and gets stuck in terrain)
+    // TODO: When player crouhced under obstacle and touches ceiling: Jump should not be possible
 
     [SetUp]
     public void SetUp()
@@ -635,6 +635,22 @@ public class PlayerStateMachineTests
         [Test]
         [TestCase(-0.01f)]
         [TestCase(-0.49f)]
+        public void WhenSettingPartialDownMovementInputBeforeThresholdAndTouchingCeiling_ThenCurrentStateIsGroundedStateAndActiveChildStateIsCrouchIdleState(
+            float yValue)
+        {
+            _sut.NotifyTouchingDirections(new TouchingDirectionsStub { IsOnCeiling = true });
+
+            var movementInput = new Vector2(0, yValue);
+
+            _sut.SetMovement(movementInput);
+
+            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
+            Assert.IsInstanceOf<CrouchIdleState>(_sut.ActiveChildState);
+        }
+
+        [Test]
+        [TestCase(-0.01f)]
+        [TestCase(-0.49f)]
         public void WhenSettingPartialDownMovementInputBeforeThresholdAndWithLateralComponent_ThenCurrentStateIsGroundedStateAndActiveChildStateIsGroundMovementState(
             float yValue)
         {
@@ -644,6 +660,22 @@ public class PlayerStateMachineTests
 
             Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
             Assert.IsInstanceOf<GroundMovementState>(_sut.ActiveChildState);
+        }
+
+        [Test]
+        [TestCase(-0.01f)]
+        [TestCase(-0.49f)]
+        public void WhenSettingPartialDownMovementInputBeforeThresholdAndWithLateralComponentAndTouchingCeiling_ThenCurrentStateIsGroundedStateAndActiveChildStateIsCrouchMovementState(
+            float yValue)
+        {
+            _sut.NotifyTouchingDirections(new TouchingDirectionsStub { IsOnCeiling = true });
+
+            var movementInput = new Vector2(0.2f, yValue);
+
+            _sut.SetMovement(movementInput);
+
+            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
+            Assert.IsInstanceOf<CrouchMovementState>(_sut.ActiveChildState);
         }
 
         [Test]
