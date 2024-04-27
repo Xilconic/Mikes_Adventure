@@ -134,6 +134,7 @@ namespace Assets.Characters.Player
                 _coyoteTimeCooldown = CoyoteTimeBuffer;
             }
             CurrentState = newState;
+            CurrentState.SetMovement(_movementInput);
             CurrentState.OnEnter();
         }
     }

@@ -17,8 +17,8 @@ public class PlayerStateMachineTests
     protected TimeMock _timeMock;
     protected AnimatorMock _animator;
 
-    // TODO: When player Jump -> Falling: player should have airial control but has none.
     // TODO: When player crouhced under obstacle and touches ceiling: Jump should not be possible
+    // TODO: ReleaseJump is being processed inconsistently
 
     [SetUp]
     public void SetUp()
@@ -395,6 +395,26 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
             Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
         }
+
+        [Test]
+        [TestCase(1f, 10.0f)]
+        [TestCase(0.1f, 1.0f)]
+        [TestCase(0.01f, 0.1f)]
+        [TestCase(-0.01f, -0.1f)]
+        [TestCase(-0.1f, -1.0f)]
+        [TestCase(-1f, -10.0f)]
+        public void AndRigidBodyHasNonZeroVelocityOnXDueToPlayerInput_WhenJumpAndFixedUpdate_ThenRigidBodyHasVelocityOnX(
+            float xValue, float expectedVelocityX)
+        {
+            _rigidBody2D.velocity = Vector2.zero;
+            _sut.SetMovement(new Vector2(xValue, 0));
+            _sut.FixedUpdate();
+
+            _sut.Jump();
+            _sut.FixedUpdate();
+
+            Assert.AreEqual(expectedVelocityX, _rigidBody2D.velocity.x, 0.001);
+        }
     }
 
     public class GivenActiveChildStateIsCrouchIdleState : PlayerStateMachineTests
@@ -749,6 +769,24 @@ public class PlayerStateMachineTests
 
             Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
             Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
+        }
+
+        [Test] // Note: Higher airial mobility, so movement input is translated into higher speeds!
+        [TestCase(0.11f, -0.5f, 1.10f)]
+        [TestCase(0.707f, -.707f, 7.07f)]
+        [TestCase(-0.11f, -.707f, -1.10f)]
+        [TestCase(-.707f, -.707f, -7.07f)]
+        public void AndRigidBodyHasNonZeroVelocityOnXDueToPlayerInput_WhenJumpAndFixedUpdate_ThenRigidBodyHasVelocityOnX(
+            float xValue, float yValue, float expectedVelocityX)
+        {
+            _rigidBody2D.velocity = Vector2.zero;
+            _sut.SetMovement(new Vector2(xValue, yValue));
+            _sut.FixedUpdate();
+
+            _sut.Jump();
+            _sut.FixedUpdate();
+
+            Assert.AreEqual(expectedVelocityX, _rigidBody2D.velocity.x, 0.001);
         }
 
         [Test]

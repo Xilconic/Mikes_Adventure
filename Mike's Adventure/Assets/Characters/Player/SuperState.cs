@@ -12,6 +12,8 @@ namespace Assets.Characters.Player
     /// </summary>
     public abstract class SuperState : IState
     {
+        private Vector2 _movementInput;
+
         public SuperState(IState initialState)
         {
             CurrentState = initialState;
@@ -29,6 +31,7 @@ namespace Assets.Characters.Player
 
         public virtual void SetMovement(Vector2 movementInput)
         {
+            _movementInput = movementInput;
             CurrentState.SetMovement(movementInput);
         }
 
@@ -45,6 +48,7 @@ namespace Assets.Characters.Player
         protected void ChangeCurrentState(IState newState)
         {
             CurrentState = newState;
+            CurrentState.SetMovement(_movementInput);
             CurrentState.OnEnter();
         }
     }
