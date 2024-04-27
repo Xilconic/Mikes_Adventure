@@ -14,13 +14,18 @@ namespace Assets.Characters.Player
         private readonly IAnimator _animator;
         private readonly ITime _time;
 
-        public AirialState(Rigidbody2D rigidbody, IAnimator animator, ITime time) : 
-            base(new FallingState(rigidbody, animator, time))
+        private AirialState(Rigidbody2D rigidbody, IAnimator animator, ITime time, IState childState) :
+            base(childState)
         {
             _rigidbody2 = rigidbody;
             _animator = animator;
             _time = time;
         }
+
+        public static AirialState CreateJumpingState(Rigidbody2D rigidbody, IAnimator animator, ITime time) =>
+            new AirialState(rigidbody, animator, time, new JumpState(rigidbody, animator));
+        public static AirialState CreateDefaultState(Rigidbody2D rigidbody, IAnimator animator, ITime time) =>
+            new AirialState(rigidbody, animator, time, new FallingState(rigidbody, animator, time));
 
         internal void Jump()
         {
@@ -33,14 +38,6 @@ namespace Assets.Characters.Player
         internal void ForceJump()
         {
             ChangeCurrentState(new JumpState(_rigidbody2, _animator));
-        }
-
-        internal void JumpRelease()
-        {
-            if(CurrentState is JumpState jumpState)
-            {
-                jumpState.JumpRelease();
-            }
         }
 
         public override void FixedUpdate()

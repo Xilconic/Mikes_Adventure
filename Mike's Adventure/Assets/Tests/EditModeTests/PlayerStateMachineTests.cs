@@ -18,7 +18,7 @@ public class PlayerStateMachineTests
     protected AnimatorMock _animator;
 
     // TODO: When player crouhced under obstacle and touches ceiling: Jump should not be possible
-    // TODO: ReleaseJump is being processed inconsistently
+    // TODO: After jumping, Mike seems to immediately go into falling state.
 
     [SetUp]
     public void SetUp()

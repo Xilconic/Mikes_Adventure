@@ -41,9 +41,8 @@ namespace Assets.Characters.Player
         {
             if (CurrentState.CanJump)
             {
-                var state = new AirialState(_rigidbody, _animator, Time);
+                var state = AirialState.CreateJumpingState(_rigidbody, _animator, Time);
                 ChangeCurrentState(state);
-                state.ForceJump();
                 _coyoteTimeCooldown = 0;
             }
             else if (CurrentState is AirialState airialState &&
@@ -60,9 +59,9 @@ namespace Assets.Characters.Player
 
         public void JumpRelease()
         {
-            if(CurrentState is AirialState airialState)
+            if(_rigidbody.velocity.y > 0)
             {
-                airialState.JumpRelease();
+                _rigidbody.AdjustVelocityY(_rigidbody.velocity.y * 0.5f);
             }
         }
 
@@ -70,7 +69,7 @@ namespace Assets.Characters.Player
         {
             if (!touchingDirections.IsGrounded && CurrentState is GroundedState)
             {
-                ChangeCurrentState(new AirialState(_rigidbody, _animator, Time));
+                ChangeCurrentState(AirialState.CreateDefaultState(_rigidbody, _animator, Time));
             }
             else if (touchingDirections.IsGrounded && CurrentState is AirialState)
             {
