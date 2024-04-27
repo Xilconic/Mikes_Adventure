@@ -12,17 +12,13 @@ namespace Assets.Characters.Player
     {
         /// <seealso cref="PlayerController.MaxRunSpeed"/> 
         private const float MaxRunSpeed = 10.0f; // TODO: Make configurable from Inspector; And ensure keep consistent with GroundedMovementState
-        /// <seealso cref="PlayerController.CoyoteTimeBuffer"/> 
-        private const float CoyoteTimeBuffer = 0.1f; // TODO: Make configurable from Inspector
-        private float _coyoteTimeCooldown = 0;
-
+        
         private readonly ITime _time;
         private readonly Rigidbody2D _rigidbody;
         private readonly IAnimator _animator;
 
         private Vector2 _movementInput;
         
-
         public FallingState(
             Rigidbody2D rigidbody,
             IAnimator animator,
@@ -36,7 +32,7 @@ namespace Assets.Characters.Player
 
         public IState ActiveChildState { get; }
 
-        public bool CanJump => _coyoteTimeCooldown > 0;
+        public bool CanJump => false;
 
         public void SetMovement(Vector2 movementInput)
         {
@@ -45,15 +41,11 @@ namespace Assets.Characters.Player
 
         public void OnEnter()
         {
-            _coyoteTimeCooldown = CoyoteTimeBuffer;
+
         }
 
         public void Update()
         {
-            if(_coyoteTimeCooldown > 0)
-            {
-                _coyoteTimeCooldown -= _time.DeltaTime;
-            }
             _animator.Play(AnimationClipNames.Falling);
         }
 

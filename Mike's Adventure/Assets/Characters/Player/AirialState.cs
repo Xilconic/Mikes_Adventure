@@ -26,8 +26,13 @@ namespace Assets.Characters.Player
         {
             if(CurrentState.CanJump)
             {
-                ChangeCurrentState(new JumpState(_rigidbody2, _animator));
+                ForceJump();
             }
+        }
+
+        internal void ForceJump()
+        {
+            ChangeCurrentState(new JumpState(_rigidbody2, _animator));
         }
 
         internal void JumpRelease()

@@ -18,7 +18,6 @@ public class PlayerStateMachineTests
     protected AnimatorMock _animator;
 
     // TODO: When player Jump -> Falling: player should have airial control but has none.
-    // TODO: When player is in Falling state: Jump should not be possible unless coyote time is active.
     // TODO: When player crouhced under obstacle and touches ceiling: Jump should not be possible
 
     [SetUp]
@@ -914,7 +913,7 @@ public class PlayerStateMachineTests
         {
             _timeMock.DeltaTime = secondsPassedSinceEnteringFallingState;
             _sut.Update(); // Time progresses
-            Assert.IsTrue(_sut.ActiveChildState.CanJump);
+            Assert.IsFalse(_sut.ActiveChildState.CanJump);
 
             _sut.Jump();
 
@@ -934,7 +933,7 @@ public class PlayerStateMachineTests
             {
                 _sut.Update(); // Time progresses
             }
-            Assert.IsTrue(_sut.ActiveChildState.CanJump);
+            Assert.IsFalse(_sut.ActiveChildState.CanJump);
 
             _sut.Jump();
 

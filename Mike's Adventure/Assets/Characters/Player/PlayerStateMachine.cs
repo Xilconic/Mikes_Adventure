@@ -12,6 +12,11 @@ namespace Assets.Characters.Player
     {
         /// <seealso cref="PlayerController.JumpBuffer">
         private const float JumpBuffer = 0.1f;
+
+        /// <seealso cref="PlayerController.CoyoteTimeBuffer"/> 
+        private const float CoyoteTimeBuffer = 0.1f; // TODO: Make configurable from Inspector
+        private float _coyoteTimeCooldown = 0;
+
         private readonly Rigidbody2D _rigidbody;
         private readonly IAnimator _animator;
         private float _jumpBufferCooldown = 0;
@@ -38,7 +43,14 @@ namespace Assets.Characters.Player
             {
                 var state = new AirialState(_rigidbody, _animator, Time);
                 ChangeCurrentState(state);
-                state.Jump();
+                state.ForceJump();
+                _coyoteTimeCooldown = 0;
+            }
+            else if (CurrentState is AirialState airialState &&
+                    _coyoteTimeCooldown > 0)
+            {
+                airialState.ForceJump();
+                _coyoteTimeCooldown = 0;
             }
             else
             {
@@ -99,6 +111,10 @@ namespace Assets.Characters.Player
             {
                 _jumpBufferCooldown -= Time.DeltaTime;
             }
+            if (_coyoteTimeCooldown > 0)
+            {
+                _coyoteTimeCooldown -= Time.DeltaTime;
+            }
         }
 
         /// <summary>
@@ -112,6 +128,11 @@ namespace Assets.Characters.Player
 
         protected void ChangeCurrentState(IState newState)
         {
+            if(CurrentState is GroundedState &&
+                newState is AirialState) 
+            {
+                _coyoteTimeCooldown = CoyoteTimeBuffer;
+            }
             CurrentState = newState;
             CurrentState.OnEnter();
         }
