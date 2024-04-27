@@ -37,8 +37,7 @@ namespace Assets.Characters.Player
             if (CurrentState.CanJump)
             {
                 var state = new AirialState(_rigidbody, _animator, Time);
-                CurrentState = state;
-                CurrentState.OnEnter();
+                ChangeCurrentState(state);
                 state.Jump();
             }
             else
@@ -59,14 +58,12 @@ namespace Assets.Characters.Player
         {
             if (!touchingDirections.IsGrounded && CurrentState is GroundedState)
             {
-                CurrentState = new AirialState(_rigidbody, _animator, Time);
-                CurrentState.OnEnter();
+                ChangeCurrentState(new AirialState(_rigidbody, _animator, Time));
             }
             else if (touchingDirections.IsGrounded && CurrentState is AirialState)
             {
                 var groundedState = new GroundedState(_rigidbody, _animator);
-                CurrentState = groundedState;
-                CurrentState.OnEnter();
+                ChangeCurrentState(groundedState);
                 if (_jumpBufferCooldown > 0)
                 {
                     Jump();
@@ -111,6 +108,12 @@ namespace Assets.Characters.Player
         public void FixedUpdate()
         {
             CurrentState.FixedUpdate();
+        }
+
+        protected void ChangeCurrentState(IState newState)
+        {
+            CurrentState = newState;
+            CurrentState.OnEnter();
         }
     }
 }
