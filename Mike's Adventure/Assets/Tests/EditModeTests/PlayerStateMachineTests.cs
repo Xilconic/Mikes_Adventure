@@ -17,8 +17,7 @@ public class PlayerStateMachineTests
     protected TimeMock _timeMock;
     protected AnimatorMock _animator;
 
-    // TODO: When player crouhced under obstacle and touches ceiling: Jump should not be possible
-    // TODO: After jumping, Mike seems to immediately go into falling state.
+    // TODO: When player crouhced under obstacle and touches ceiling: Jump should not be possible (can still happen inconsistently :( )
 
     [SetUp]
     public void SetUp()
@@ -52,6 +51,16 @@ public class PlayerStateMachineTests
     {
         Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
         Assert.IsInstanceOf<IdleState>(_sut.ActiveChildState);
+    }
+
+    protected void SimulateJumpInputProcessing(bool shouldNotifyTouchingDirectionsNoLongerTouchingGround = false)
+    {
+        _sut.Jump();
+        if (shouldNotifyTouchingDirectionsNoLongerTouchingGround)
+        {
+            _sut.NotifyTouchingDirections(new TouchingDirectionsStub { IsGrounded = false });
+        }
+        _sut.FixedUpdate(); // FixedUpdate() required due to physics interactions!
     }
 
     public class GivenNewInstance : PlayerStateMachineTests
@@ -208,7 +217,7 @@ public class PlayerStateMachineTests
         [Test]
         public void WhenJumpButtonPressed_ThenCurrentStateIsAirialStateAndActiveChildStateIsJumpState()
         {
-            _sut.Jump();
+            SimulateJumpInputProcessing();
 
             Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
             Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
@@ -390,7 +399,7 @@ public class PlayerStateMachineTests
         [Test]
         public void WhenJumpButtonPressed_ThenCurrentStateIsAirialStateAndActiveChildStateIsJumpState()
         {
-            _sut.Jump();
+            SimulateJumpInputProcessing();
 
             Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
             Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
@@ -410,8 +419,7 @@ public class PlayerStateMachineTests
             _sut.SetMovement(new Vector2(xValue, 0));
             _sut.FixedUpdate();
 
-            _sut.Jump();
-            _sut.FixedUpdate();
+            SimulateJumpInputProcessing();
 
             Assert.AreEqual(expectedVelocityX, _rigidBody2D.velocity.x, 0.001);
         }
@@ -563,7 +571,7 @@ public class PlayerStateMachineTests
         [Test]
         public void WhenJumpButtonPressed_ThenCurrentStateIsAirialStateAndActiveChildStateIsJumpState()
         {
-            _sut.Jump();
+            SimulateJumpInputProcessing();
 
             Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
             Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
@@ -578,7 +586,7 @@ public class PlayerStateMachineTests
             };
             _sut.NotifyTouchingDirections(touchingDirections);
 
-            _sut.Jump();
+            SimulateJumpInputProcessing();
 
             AssertInitialStateConditions();
         }
@@ -765,7 +773,7 @@ public class PlayerStateMachineTests
         [Test]
         public void WhenJumpButtonPressed_ThenCurrentStateIsAirialStateAndActiveChildStateIsJumpState()
         {
-            _sut.Jump();
+            SimulateJumpInputProcessing();
 
             Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
             Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
@@ -783,8 +791,7 @@ public class PlayerStateMachineTests
             _sut.SetMovement(new Vector2(xValue, yValue));
             _sut.FixedUpdate();
 
-            _sut.Jump();
-            _sut.FixedUpdate();
+            SimulateJumpInputProcessing();
 
             Assert.AreEqual(expectedVelocityX, _rigidBody2D.velocity.x, 0.001);
         }
@@ -798,7 +805,7 @@ public class PlayerStateMachineTests
             };
             _sut.NotifyTouchingDirections(touchingDirections);
 
-            _sut.Jump();
+            SimulateJumpInputProcessing();
 
             AssertInitialStateConditions();
         }
@@ -953,7 +960,7 @@ public class PlayerStateMachineTests
             _sut.Update(); // Time progresses
             Assert.IsFalse(_sut.ActiveChildState.CanJump);
 
-            _sut.Jump();
+            SimulateJumpInputProcessing();
 
             Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
             Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
@@ -973,7 +980,7 @@ public class PlayerStateMachineTests
             }
             Assert.IsFalse(_sut.ActiveChildState.CanJump);
 
-            _sut.Jump();
+            SimulateJumpInputProcessing();
 
             Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
             Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
@@ -989,7 +996,7 @@ public class PlayerStateMachineTests
             _sut.Update(); // Time progresses
             Assert.IsFalse(_sut.ActiveChildState.CanJump);
 
-            _sut.Jump();
+            SimulateJumpInputProcessing();
 
             AssertInitialStateConditions();
         }
@@ -1007,7 +1014,7 @@ public class PlayerStateMachineTests
             }
             Assert.IsFalse(_sut.ActiveChildState.CanJump);
 
-            _sut.Jump();
+            SimulateJumpInputProcessing();
 
             AssertInitialStateConditions();
         }
@@ -1020,7 +1027,7 @@ public class PlayerStateMachineTests
         {
             _timeMock.DeltaTime = 1f;
             _sut.Update(); // Pass time beyond Coyote Time
-            _sut.Jump();
+            SimulateJumpInputProcessing();
             AssertInitialStateConditions();
 
             _timeMock.DeltaTime = secondsPassedSinceJumpButtonPressed;
@@ -1045,7 +1052,7 @@ public class PlayerStateMachineTests
         {
             _timeMock.DeltaTime = 1f;
             _sut.Update(); // Pass time beyond Coyote Time
-            _sut.Jump();
+            SimulateJumpInputProcessing();
             AssertInitialStateConditions();
 
             _timeMock.DeltaTime = secondsPassedSinceJumpButtonPressed;
@@ -1069,7 +1076,7 @@ public class PlayerStateMachineTests
         {
             base.AdditionalSetUp();
 
-            _sut.Jump();
+            SimulateJumpInputProcessing(true);
         }
 
         protected override void AssertInitialStateConditions()
@@ -1093,13 +1100,13 @@ public class PlayerStateMachineTests
         }
 
         [Test]
-        public void AndUpwardVelocityHasDecreasedDuePassageOfTime_WhenJumping_ThenRigidBodyVelocityYUnchanged()
+        public void AndUpwardVelocityHasDecreasedDuePassageOfTime_WhenJumpingAndFixedUpdate_ThenRigidBodyVelocityYUnchanged()
         {
             _rigidBody2D.velocity = new Vector2(0, 5.0f);
             _timeMock.DeltaTime = 0.1f;
             _sut.FixedUpdate();
 
-            _sut.Jump();
+            _sut.FixedUpdate(); // FixedUpdate() required due to physics interactions!
 
             Assert.AreEqual(5.0f, _rigidBody2D.velocity.y);
             AssertInitialStateConditions();
@@ -1188,8 +1195,8 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
         }
 
-        [Test]
-        public void WhenHittingGround_ThenCurrentStateIsGroundedStateAndActiveChildStateIsIdleState()
+        [Test(Description = "When in the JumpState, touching the ground means nothing as we're still going upwards. We're just brushing alongside an edge, and therefore should continue to remain in JumpState.")]
+        public void WhenHittingGround_ThenStateIsUnchanged()
         {
             var touchingDirections = new TouchingDirectionsStub
             {
@@ -1197,14 +1204,13 @@ public class PlayerStateMachineTests
             };
             _sut.NotifyTouchingDirections(touchingDirections);
 
-            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
-            Assert.IsInstanceOf<IdleState>(_sut.ActiveChildState);
+            AssertInitialStateConditions();
         }
 
-        [Test]
+        [Test(Description = "When in the JumpState, touching the ground means nothing as we're still going upwards. We're just brushing alongside an edge, and therefore should continue to remain in JumpState.")]
         [TestCase(-0.01f)]
         [TestCase(-0.49f)]
-        public void WhenHittingGroundWithNonSignificantDownwardMovementInput_ThenCurrentStateIsGroundedStateAndActiveChildStateIsIdleState(
+        public void WhenHittingGroundWithNonSignificantDownwardMovementInput_ThenStateIsUnchanged(
             float yValue)
         {
             _sut.SetMovement(new Vector2(0, yValue));
@@ -1214,12 +1220,11 @@ public class PlayerStateMachineTests
             };
             _sut.NotifyTouchingDirections(touchingDirections);
 
-            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
-            Assert.IsInstanceOf<IdleState>(_sut.ActiveChildState);
+            AssertInitialStateConditions();
         }
 
-        [Test]
-        public void WhenHittingGroundWithNonZeroLateralMovementInput_ThenCurrentStateIsGroundedStateAndActiveChildStateIsIdleState()
+        [Test(Description = "When in the JumpState, touching the ground means nothing as we're still going upwards. We're just brushing alongside an edge, and therefore should continue to remain in JumpState.")]
+        public void WhenHittingGroundWithNonZeroLateralMovementInput_ThenStateIsUnchanged()
         {
             _sut.SetMovement(Vector2.right);
             var touchingDirections = new TouchingDirectionsStub
@@ -1228,12 +1233,11 @@ public class PlayerStateMachineTests
             };
             _sut.NotifyTouchingDirections(touchingDirections);
 
-            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
-            Assert.IsInstanceOf<GroundMovementState>(_sut.ActiveChildState);
+            AssertInitialStateConditions();
         }
 
-        [Test]
-        public void WhenHittingGroundWithSignificantDownMovementAndWithInsignificantLateralMovement_ThenCurrentStateIsGroundedStateAndActiveChildStateIsCrouchIdleState(
+        [Test(Description = "When in the JumpState, touching the ground means nothing as we're still going upwards. We're just brushing alongside an edge, and therefore should continue to remain in JumpState.")]
+        public void WhenHittingGroundWithSignificantDownMovementAndWithInsignificantLateralMovement_ThenStateIsUnchanged(
             [Values(0f, 0.1f, -0.1f)] float xValue,
             [Values(-0.5f, -.8f)] float yValue)
         {
@@ -1245,12 +1249,11 @@ public class PlayerStateMachineTests
             };
             _sut.NotifyTouchingDirections(touchingDirections);
 
-            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
-            Assert.IsInstanceOf<CrouchIdleState>(_sut.ActiveChildState);
+            AssertInitialStateConditions();
         }
 
-        [Test]
-        public void WhenHittingGroundWithSignificantDownMovementAndSignificantLateralMovement_ThenCurrentStateIsGroundedStateAndActiveChildStateIsCrouchMovementState(
+        [Test(Description = "When in the JumpState, touching the ground means nothing as we're still going upwards. We're just brushing alongside an edge, and therefore should continue to remain in JumpState.")]
+        public void WhenHittingGroundWithSignificantDownMovementAndSignificantLateralMovement_ThenStateIsUnchanged(
             [Values(0.11f, 0.707f, -0.11f, -0.707f)] float xValue,
             [Values(-0.5f, -.707f)] float yValue)
         {
@@ -1262,8 +1265,7 @@ public class PlayerStateMachineTests
             };
             _sut.NotifyTouchingDirections(touchingDirections);
 
-            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
-            Assert.IsInstanceOf<CrouchMovementState>(_sut.ActiveChildState);
+            AssertInitialStateConditions();
         }
     }
 

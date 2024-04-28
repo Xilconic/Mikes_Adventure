@@ -20,6 +20,7 @@ namespace Assets.Characters.Player
         private readonly IAnimator _animator;
 
         private Vector2 _movementInput;
+        private bool shouldPerformJumpImpulse = false;
 
         public JumpState(Rigidbody2D rigidbody, IAnimator animator)
         {
@@ -35,7 +36,7 @@ namespace Assets.Characters.Player
 
         public void OnEnter()
         {
-            _rigidbody.AdjustVelocityY(JumpImpulse);
+            shouldPerformJumpImpulse = true;
         }
 
         public void Update()
@@ -45,7 +46,16 @@ namespace Assets.Characters.Player
 
         public void FixedUpdate()
         {
-            _rigidbody.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
+            var velocityX = _movementInput.x * MaxRunSpeed;
+            if (shouldPerformJumpImpulse)
+            {
+                _rigidbody.velocity = new Vector2(velocityX, JumpImpulse);
+                shouldPerformJumpImpulse = false;
+            }
+            else
+            {
+                _rigidbody.AdjustVelocityX(velocityX);
+            }
         }
 
         public void SetMovement(Vector2 movementInput)

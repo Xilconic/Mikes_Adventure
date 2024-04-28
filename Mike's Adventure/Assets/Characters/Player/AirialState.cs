@@ -42,11 +42,11 @@ namespace Assets.Characters.Player
 
         public override void FixedUpdate()
         {
-            if(_rigidbody2.velocity.y <= 0)
+            base.FixedUpdate();
+            if (_rigidbody2.velocity.y <= 0)
             {
                 ChangeCurrentState(new FallingState(_rigidbody2, _animator, _time));
             }
-            base.FixedUpdate();
         }
     }
 }

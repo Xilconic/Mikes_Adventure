@@ -71,7 +71,7 @@ namespace Assets.Characters.Player
             {
                 ChangeCurrentState(AirialState.CreateDefaultState(_rigidbody, _animator, Time));
             }
-            else if (touchingDirections.IsGrounded && CurrentState is AirialState)
+            else if (touchingDirections.IsGrounded && CurrentState is AirialState && ActiveChildState is not JumpState)
             {
                 var groundedState = new GroundedState(_rigidbody, _animator);
                 ChangeCurrentState(groundedState);
