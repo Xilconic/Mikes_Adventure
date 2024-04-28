@@ -10,18 +10,16 @@ namespace Assets.Characters.Player
 {
     public class GroundMovementState : IState
     {
-        /// <seealso cref="PlayerController.MaxRunSpeed"/>
-        private const float MaxRunSpeed = 10.0f; // TODO: Make configurable from inspector
-        /// <seealso cref="PlayerController.MaxWalkSpeed"/>
-        private const float MaxWalkSpeed = 5.0f; // TODO: Make configurable from inspector
         private readonly Rigidbody2D _rigidbody;
         private readonly IAnimator _animator;
+        private readonly PlayerConfiguration _configuration;
         private Vector2 _movementInput;
 
-        public GroundMovementState(Rigidbody2D rigidbody, IAnimator animator)
+        public GroundMovementState(Rigidbody2D rigidbody, IAnimator animator, PlayerConfiguration configuration)
         {
             _rigidbody = rigidbody;
             _animator = animator;
+            _configuration = configuration;
 
             ActiveChildState = this;
         }
@@ -37,7 +35,7 @@ namespace Assets.Characters.Player
 
         public void Update()
         {
-            if(Mathf.Abs(_rigidbody.velocity.x) <= MaxWalkSpeed)
+            if(Mathf.Abs(_rigidbody.velocity.x) <= _configuration.MaxWalkSpeed)
             {
                 _animator.Play(AnimationClipNames.Walk);
             }
@@ -49,7 +47,7 @@ namespace Assets.Characters.Player
 
         public void FixedUpdate()
         {
-            _rigidbody.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
+            _rigidbody.AdjustVelocityX(_movementInput.x * _configuration.MaxRunSpeed);
         }
 
         public void SetMovement(Vector2 movementInput)

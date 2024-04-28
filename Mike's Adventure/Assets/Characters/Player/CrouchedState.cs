@@ -10,16 +10,17 @@ namespace Assets.Characters.Player
 {
     internal class CrouchedState : SuperState
     {
-        /// <seealso cref="PlayerController.CrouchLateralInputDeadZone"/>
-        private const float CrouchLateralInputDeadZone = 0.1f; // TODO: Make configurable from Inspector
         private readonly Rigidbody2D _rigidBody;
         private readonly IAnimator _animator;
+        private readonly PlayerConfiguration _configuration;
         private ITouchingDirections _touchingDirections;
 
-        public CrouchedState(Rigidbody2D rigidbody, IAnimator animator) : base(new CrouchIdleState(rigidbody, animator))
+        public CrouchedState(Rigidbody2D rigidbody, IAnimator animator, PlayerConfiguration configuration) : 
+            base(new CrouchIdleState(rigidbody, animator))
         {
             _rigidBody = rigidbody;
             _animator = animator;
+            _configuration = configuration;
         }
 
         private bool IsTouchingCeiling => (!_touchingDirections?.IsOnCeiling) ?? true;
@@ -28,9 +29,9 @@ namespace Assets.Characters.Player
 
         public override void SetMovement(Vector2 movementInput)
         {
-            if (Mathf.Abs(movementInput.x) > CrouchLateralInputDeadZone)
+            if (Mathf.Abs(movementInput.x) > _configuration.CrouchLateralInputDeadZone)
             {
-                ChangeCurrentState(new CrouchMovementState(_rigidBody, _animator));
+                ChangeCurrentState(new CrouchMovementState(_rigidBody, _animator, _configuration));
             }
             else
             {

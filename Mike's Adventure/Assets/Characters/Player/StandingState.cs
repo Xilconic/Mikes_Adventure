@@ -12,21 +12,24 @@ namespace Assets.Characters.Player
     {
         private readonly Rigidbody2D _rigidbody;
         private readonly IAnimator _animator;
+        private readonly PlayerConfiguration _configuration;
 
         public StandingState(
             Rigidbody2D rigidbody,
-            IAnimator animator) : 
+            IAnimator animator,
+            PlayerConfiguration configuration) : 
             base(new IdleState(rigidbody, animator))
         {
             _rigidbody = rigidbody;
             _animator = animator;
+            _configuration = configuration;
         }
 
         public override void SetMovement(Vector2 movementInput)
         {
             if (movementInput.x != 0)
             {
-                ChangeCurrentState(new GroundMovementState(_rigidbody, _animator));
+                ChangeCurrentState(new GroundMovementState(_rigidbody, _animator, _configuration));
             }
             else
             {

@@ -10,26 +10,19 @@ namespace Assets.Characters.Player
 {
     public class JumpState : IState
     {
-        /// <seealso cref="PlayerController.MaxRunSpeed"/> 
-        private const float MaxRunSpeed = 10.0f; // TODO: Make configurable from Inspector; And ensure keep consistent with GroundedMovementState
-
-        /// <seealso cref="PlayerController.JumpImpulse"/>
-        private const float JumpImpulse = 10f; // TODO: Make configurable from Inspector
-
-        /// <seealso cref="PlayerController.JumpingGravityScale"/>
-        private const float JumpingGravityScale = 1.0f; // TODO: Make configurable from Inspector
-
         private readonly Rigidbody2D _rigidbody;
         private readonly IAnimator _animator;
+        private readonly PlayerConfiguration _configuration;
 
         private Vector2 _movementInput;
         private bool shouldPerformJumpImpulse = false;
         private bool setJumpingGravityScale = false;
 
-        public JumpState(Rigidbody2D rigidbody, IAnimator animator)
+        public JumpState(Rigidbody2D rigidbody, IAnimator animator, PlayerConfiguration configuration)
         {
             _rigidbody = rigidbody;
             _animator = animator;
+            _configuration = configuration;
 
             ActiveChildState = this;
         }
@@ -51,14 +44,14 @@ namespace Assets.Characters.Player
 
         public void FixedUpdate()
         {
-            var velocityX = _movementInput.x * MaxRunSpeed;
+            var velocityX = _movementInput.x * _configuration.MaxRunSpeed;
             if (setJumpingGravityScale)
             {
-                _rigidbody.gravityScale = JumpingGravityScale;
+                _rigidbody.gravityScale = _configuration.JumpingGravityScale;
             }
             if (shouldPerformJumpImpulse)
             {
-                _rigidbody.velocity = new Vector2(velocityX, JumpImpulse);
+                _rigidbody.velocity = new Vector2(velocityX, _configuration.JumpImpulse);
                 shouldPerformJumpImpulse = false;
             }
             else

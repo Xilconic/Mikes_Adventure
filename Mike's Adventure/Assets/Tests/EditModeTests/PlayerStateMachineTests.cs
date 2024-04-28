@@ -24,9 +24,10 @@ public class PlayerStateMachineTests
     {
         _gameObject = new GameObject();
         _rigidBody2D = _gameObject.AddComponent<Rigidbody2D>();
+        var configuration = _gameObject.AddComponent<PlayerConfiguration>();
         _timeMock = new TimeMock();
         _animator = new AnimatorMock();
-        _sut = new PlayerStateMachine(_rigidBody2D, _animator)
+        _sut = new PlayerStateMachine(_rigidBody2D, _animator, configuration)
         {
             Time = _timeMock,
         };

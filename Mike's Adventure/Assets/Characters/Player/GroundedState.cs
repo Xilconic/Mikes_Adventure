@@ -10,10 +10,9 @@ namespace Assets.Characters.Player
 {
     public class GroundedState : SuperState
     {
-        /// <seealso cref="PlayerController.CrouchInputZone"/>
-        private const float CrouchVerticalInputThreshold = -0.5f; // TODO: Make configurable from Inspector
         private readonly Rigidbody2D _rigidbody;
         private readonly IAnimator _animator;
+        private readonly PlayerConfiguration _configuration;
         private ITouchingDirections _touchingDirections;
 
         private bool IsTouchingCeiling
@@ -33,23 +32,25 @@ namespace Assets.Characters.Player
 
         public GroundedState(
             Rigidbody2D rigidbody,
-            IAnimator animator) : 
-            base(new StandingState(rigidbody, animator))
+            IAnimator animator,
+            PlayerConfiguration configuration) : 
+            base(new StandingState(rigidbody, animator, configuration))
         {
             _rigidbody = rigidbody;
             _animator = animator;
+            _configuration = configuration;
         }
 
         public override void SetMovement(Vector2 movementInput)
         {
-            if (movementInput.y <= CrouchVerticalInputThreshold ||
+            if (movementInput.y <= _configuration.CrouchInputZone ||
                 (CurrentState is CrouchedState && IsTouchingCeiling))
             {
-                ChangeCurrentState(new CrouchedState(_rigidbody, _animator));
+                ChangeCurrentState(new CrouchedState(_rigidbody, _animator, _configuration));
             }
             else
             {
-                ChangeCurrentState(new StandingState(_rigidbody, _animator));
+                ChangeCurrentState(new StandingState(_rigidbody, _animator, _configuration));
             }
 
             base.SetMovement(movementInput);

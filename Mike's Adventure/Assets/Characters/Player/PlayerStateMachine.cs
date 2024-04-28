@@ -10,26 +10,23 @@ namespace Assets.Characters.Player
 {
     public class PlayerStateMachine
     {
-        /// <seealso cref="PlayerController.JumpBuffer">
-        private const float JumpBuffer = 0.1f;
-
-        /// <seealso cref="PlayerController.CoyoteTimeBuffer"/> 
-        private const float CoyoteTimeBuffer = 0.1f; // TODO: Make configurable from Inspector
-        private float _coyoteTimeCooldown = 0;
-
         private readonly Rigidbody2D _rigidbody;
         private readonly IAnimator _animator;
-        private float _jumpBufferCooldown = 0;
-
+        private readonly PlayerConfiguration _configuration;
+        
         private Vector2 _movementInput;
+        private float _jumpBufferCooldown = 0;
+        private float _coyoteTimeCooldown = 0;
 
         public PlayerStateMachine(
             Rigidbody2D rigidbody,
-            IAnimator animator)
+            IAnimator animator,
+            PlayerConfiguration configuration)
         {
             _rigidbody = rigidbody;
             _animator = animator;
-            CurrentState = new GroundedState(_rigidbody, _animator);
+            _configuration = configuration;
+            CurrentState = new GroundedState(_rigidbody, _animator, _configuration);
         }
 
         public ITime Time { get; set; } = new UnityTime();
@@ -41,7 +38,7 @@ namespace Assets.Characters.Player
         {
             if (CurrentState.CanJump)
             {
-                var state = AirialState.CreateJumpingState(_rigidbody, _animator, Time);
+                var state = AirialState.CreateJumpingState(_rigidbody, _animator, _configuration);
                 ChangeCurrentState(state);
                 _coyoteTimeCooldown = 0;
             }
@@ -53,7 +50,7 @@ namespace Assets.Characters.Player
             }
             else
             {
-                _jumpBufferCooldown = JumpBuffer;
+                _jumpBufferCooldown = _configuration.JumpBuffer;
             }
         }
 
@@ -69,11 +66,11 @@ namespace Assets.Characters.Player
         {
             if (!touchingDirections.IsGrounded && CurrentState is GroundedState)
             {
-                ChangeCurrentState(AirialState.CreateDefaultState(_rigidbody, _animator, Time));
+                ChangeCurrentState(AirialState.CreateDefaultState(_rigidbody, _animator, _configuration));
             }
             else if (touchingDirections.IsGrounded && CurrentState is AirialState && ActiveChildState is not JumpState)
             {
-                var groundedState = new GroundedState(_rigidbody, _animator);
+                var groundedState = new GroundedState(_rigidbody, _animator, _configuration);
                 ChangeCurrentState(groundedState);
                 if (_jumpBufferCooldown > 0)
                 {
@@ -130,7 +127,7 @@ namespace Assets.Characters.Player
             if(CurrentState is GroundedState &&
                 newState is AirialState) 
             {
-                _coyoteTimeCooldown = CoyoteTimeBuffer;
+                _coyoteTimeCooldown = _configuration.CoyoteTimeBuffer;
             }
             CurrentState = newState;
             CurrentState.SetMovement(_movementInput);

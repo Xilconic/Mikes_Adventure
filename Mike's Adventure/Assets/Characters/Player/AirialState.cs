@@ -10,22 +10,24 @@ namespace Assets.Characters.Player
 {
     public class AirialState : SuperState
     {
-        private readonly Rigidbody2D _rigidbody2;
+        private readonly Rigidbody2D _rigidbody;
         private readonly IAnimator _animator;
-        private readonly ITime _time;
+        private readonly PlayerConfiguration _configuration;
 
-        private AirialState(Rigidbody2D rigidbody, IAnimator animator, ITime time, IState childState) :
+        private AirialState(Rigidbody2D rigidbody, IAnimator animator, PlayerConfiguration configuration, IState childState) :
             base(childState)
         {
-            _rigidbody2 = rigidbody;
+            _rigidbody = rigidbody;
             _animator = animator;
-            _time = time;
+            _configuration = configuration;
         }
 
-        public static AirialState CreateJumpingState(Rigidbody2D rigidbody, IAnimator animator, ITime time) =>
-            new AirialState(rigidbody, animator, time, new JumpState(rigidbody, animator));
-        public static AirialState CreateDefaultState(Rigidbody2D rigidbody, IAnimator animator, ITime time) =>
-            new AirialState(rigidbody, animator, time, new FallingState(rigidbody, animator, time));
+        public static AirialState CreateJumpingState(Rigidbody2D rigidbody, IAnimator animator, PlayerConfiguration configuration) =>
+            new(rigidbody, animator, configuration, 
+                new JumpState(rigidbody, animator, configuration));
+        public static AirialState CreateDefaultState(Rigidbody2D rigidbody, IAnimator animator, PlayerConfiguration configuration) =>
+            new(rigidbody, animator, configuration,
+                new FallingState(rigidbody, animator, configuration));
 
         internal void Jump()
         {
@@ -37,15 +39,15 @@ namespace Assets.Characters.Player
 
         internal void ForceJump()
         {
-            ChangeCurrentState(new JumpState(_rigidbody2, _animator));
+            ChangeCurrentState(new JumpState(_rigidbody, _animator, _configuration));
         }
 
         public override void FixedUpdate()
         {
             base.FixedUpdate();
-            if (_rigidbody2.velocity.y <= 0)
+            if (_rigidbody.velocity.y <= 0)
             {
-                ChangeCurrentState(new FallingState(_rigidbody2, _animator, _time));
+                ChangeCurrentState(new FallingState(_rigidbody, _animator, _configuration));
             }
         }
     }

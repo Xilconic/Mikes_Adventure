@@ -10,16 +10,16 @@ namespace Assets.Characters.Player
 {
     public class CrouchMovementState : IState
     {
-        /// <seealso cref="PlayerController.MaxChrouchWalkSpeed"/>
-        private const float MaxRunSpeed = 3.0f; // TODO: Make configurable from inspector
         private readonly Rigidbody2D _rigidbody;
         private readonly IAnimator _animator;
+        private readonly PlayerConfiguration _configuration;
         private Vector2 _movementInput;
 
-        public CrouchMovementState(Rigidbody2D rigidbody, IAnimator animator)
+        public CrouchMovementState(Rigidbody2D rigidbody, IAnimator animator, PlayerConfiguration configuration)
         {
             _rigidbody = rigidbody;
             _animator = animator;
+            _configuration = configuration;
 
             ActiveChildState = this;
         }
@@ -40,7 +40,7 @@ namespace Assets.Characters.Player
 
         public void FixedUpdate()
         {
-            _rigidbody.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
+            _rigidbody.AdjustVelocityX(_movementInput.x * _configuration.MaxCrouchWalkSpeed);
         }
 
         public void SetMovement(Vector2 movementInput)
