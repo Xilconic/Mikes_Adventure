@@ -12,12 +12,15 @@ namespace Assets.Characters.Player
     {
         /// <seealso cref="PlayerController.MaxRunSpeed"/> 
         private const float MaxRunSpeed = 10.0f; // TODO: Make configurable from Inspector; And ensure keep consistent with GroundedMovementState
+        /// <seealso cref="PlayerController.FallingGravityScale"/> 
+        private const float FallingGravityScale = 2.0f; //TODO: Make configurable from Inspector
         
         private readonly ITime _time;
         private readonly Rigidbody2D _rigidbody;
         private readonly IAnimator _animator;
 
         private Vector2 _movementInput;
+        private bool setFallingGravityScale = false;
         
         public FallingState(
             Rigidbody2D rigidbody,
@@ -41,7 +44,7 @@ namespace Assets.Characters.Player
 
         public void OnEnter()
         {
-
+            setFallingGravityScale = true;
         }
 
         public void Update()
@@ -51,6 +54,11 @@ namespace Assets.Characters.Player
 
         public void FixedUpdate()
         {
+            if (setFallingGravityScale)
+            {
+                _rigidbody.gravityScale = 2.0f;
+                setFallingGravityScale = false;
+            }
             _rigidbody.AdjustVelocityX(_movementInput.x * MaxRunSpeed);
         }
     }

@@ -16,11 +16,15 @@ namespace Assets.Characters.Player
         /// <seealso cref="PlayerController.JumpImpulse"/>
         private const float JumpImpulse = 10f; // TODO: Make configurable from Inspector
 
+        /// <seealso cref="PlayerController.JumpingGravityScale"/>
+        private const float JumpingGravityScale = 1.0f; // TODO: Make configurable from Inspector
+
         private readonly Rigidbody2D _rigidbody;
         private readonly IAnimator _animator;
 
         private Vector2 _movementInput;
         private bool shouldPerformJumpImpulse = false;
+        private bool setJumpingGravityScale = false;
 
         public JumpState(Rigidbody2D rigidbody, IAnimator animator)
         {
@@ -37,6 +41,7 @@ namespace Assets.Characters.Player
         public void OnEnter()
         {
             shouldPerformJumpImpulse = true;
+            setJumpingGravityScale = true;
         }
 
         public void Update()
@@ -47,6 +52,10 @@ namespace Assets.Characters.Player
         public void FixedUpdate()
         {
             var velocityX = _movementInput.x * MaxRunSpeed;
+            if (setJumpingGravityScale)
+            {
+                _rigidbody.gravityScale = JumpingGravityScale;
+            }
             if (shouldPerformJumpImpulse)
             {
                 _rigidbody.velocity = new Vector2(velocityX, JumpImpulse);

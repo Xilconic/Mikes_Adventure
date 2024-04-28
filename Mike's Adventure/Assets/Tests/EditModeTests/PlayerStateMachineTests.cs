@@ -822,6 +822,7 @@ public class PlayerStateMachineTests
                 IsGrounded = false,
             };
             _sut.NotifyTouchingDirections(touchingDirections);
+            _sut.FixedUpdate();
         }
 
         protected override void AssertInitialStateConditions()
@@ -836,6 +837,12 @@ public class PlayerStateMachineTests
             _sut.Update();
 
             Assert.AreEqual(AnimationClipNames.Falling, _animator.CurrentPlayingAnimationClip);
+        }
+
+        [Test]
+        public void ThenRigidBodyHasGravityScaleTwo()
+        {
+            Assert.AreEqual(2f, _rigidBody2D.gravityScale);
         }
 
         [Test]
@@ -953,7 +960,7 @@ public class PlayerStateMachineTests
         [Test]
         [TestCase(0f)]
         [TestCase(0.09999f)]
-        public void WhenCoyoteTimeActiveAndJumpButtonPressed_ThenCurrentStateIsAirialStateAndActiveChildStateIsJumpState(
+        public void WhenCoyoteTimeActiveAndJumpButtonPressed_ThenCurrentStateIsAirialStateAndActiveChildStateIsJumpStateAndGravityScaleResetToOne(
             float secondsPassedSinceEnteringFallingState)
         {
             _timeMock.DeltaTime = secondsPassedSinceEnteringFallingState;
@@ -964,6 +971,8 @@ public class PlayerStateMachineTests
 
             Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
             Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
+
+            Assert.AreEqual(1f, _rigidBody2D.gravityScale);
         }
 
         [Test]
@@ -1097,6 +1106,12 @@ public class PlayerStateMachineTests
         public void ThenRigidBodyHasVelocityY()
         {
             Assert.AreEqual(10.0f, _rigidBody2D.velocity.y);
+        }
+
+        [Test]
+        public void ThenRigidBodyHasGravityScalingOne()
+        {
+            Assert.AreEqual(1f, _rigidBody2D.gravityScale);
         }
 
         [Test]
