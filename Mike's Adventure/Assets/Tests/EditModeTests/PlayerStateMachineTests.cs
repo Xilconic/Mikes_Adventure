@@ -1078,6 +1078,39 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
             Assert.IsInstanceOf<IdleState>(_sut.ActiveChildState);
         }
+
+        [Test]
+        public void WhenTouchesWall_ThenCurrentStateIsAirialAndActiveChildStateIsWallSlideState()
+        {
+            // ... simulate falling / grazing past ledge:
+            var touchingDirections = new TouchingDirectionsStub
+            {
+                IsGrounded = false, // Need to still be airborne
+                IsOnWall = true,
+            };
+            _sut.NotifyTouchingDirections(touchingDirections);
+            _sut.FixedUpdate();
+
+            Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
+            Assert.IsInstanceOf<WallSlideState>(_sut.ActiveChildState);
+        }
+
+        [Test]
+        public void WhenFallsIntoWall_ThenCurrentStateIsAirialAndActiveChildStateIsWallSlideState()
+        {
+            // ... while simulating player movement into a wall:
+            _sut.SetMovement(Vector2.right);
+            var touchingDirections = new TouchingDirectionsStub
+            {
+                IsGrounded = false, // Need to still be airborne
+                IsOnWall = true,
+            };
+            _sut.NotifyTouchingDirections(touchingDirections);
+            _sut.FixedUpdate();
+
+            Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
+            Assert.IsInstanceOf<WallSlideState>(_sut.ActiveChildState);
+        }
     }
 
     public class GivenActiveChildStateIsJumpState : PlayerStateMachineTests
@@ -1096,7 +1129,7 @@ public class PlayerStateMachineTests
         }
 
         [Test]
-        public void WhenUpdate_ThenAnimationIsSetToMikeWalk()
+        public void WhenUpdate_ThenAnimationIsSetToMikeJump()
         {
             _sut.Update();
 
@@ -1283,8 +1316,289 @@ public class PlayerStateMachineTests
 
             AssertInitialStateConditions();
         }
+
+        [Test]
+        public void WhenTouchingWall_ThenStateIsUnchaged()
+        {
+            // ... simulating jumping / scraping past a ledge:
+            var touchingDirections = new TouchingDirectionsStub
+            {
+                IsGrounded = false, // Need to still be airborne
+                IsOnWall = true,
+            };
+            _sut.NotifyTouchingDirections(touchingDirections);
+            _sut.FixedUpdate();
+
+            AssertInitialStateConditions();
+        }
+
+        [Test]
+        public void WhenJumpingUpAndIntoWall_ThenStateIsUnchaged()
+        {
+            // ... while simulating player movement into a wall:
+            _sut.SetMovement(Vector2.right);
+            var touchingDirections = new TouchingDirectionsStub
+            {
+                IsGrounded = false, // Need to still be airborne
+                IsOnWall = true,
+            };
+            _sut.NotifyTouchingDirections(touchingDirections);
+            _sut.FixedUpdate();
+
+            AssertInitialStateConditions();
+        }
     }
 
-    // TODO: Implement WallSlide state and transitions and effects
+    public class GivenActiveChildStateIsWallSlideState : PlayerStateMachineTests
+    {
+        protected override void AdditionalSetUp()
+        {
+            base.AdditionalSetUp();
+
+            // Jump...
+            SimulateJumpInputProcessing(true);
+            Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
+
+            // ... then go into FallingState...
+            _rigidBody2D.velocity = new Vector2(0, -4f);
+            _sut.FixedUpdate();
+            Assert.IsInstanceOf<FallingState>(_sut.ActiveChildState);
+
+            // ... while simulating player movement into a wall:
+            _sut.SetMovement(Vector2.right);
+            var touchingDirections = new TouchingDirectionsStub
+            {
+                IsGrounded = false, // Need to still be airborne
+                IsOnWall = true,
+            };
+            _sut.NotifyTouchingDirections(touchingDirections);
+            _sut.FixedUpdate();
+        }
+
+        protected override void AssertInitialStateConditions()
+        {
+            Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
+            Assert.IsInstanceOf<WallSlideState>(_sut.ActiveChildState);
+        }
+
+        [Test]
+        public void WhenUpdate_ThenAnimationIsSetToMikeWallSlide()
+        {
+            _sut.Update();
+
+            Assert.AreEqual(AnimationClipNames.WallSlide, _animator.CurrentPlayingAnimationClip);
+        }
+
+        [Test]
+        public void WhenFixedUpdate_ThenRigidBodyHasGravityScalingHalf()
+        {
+            _sut.FixedUpdate();
+
+            Assert.AreEqual(0.5f, _rigidBody2D.gravityScale);
+            Assert.AreEqual(-3.0f, _rigidBody2D.velocity.y);
+        }
+
+        [Test]
+        [TestCase(1.0f, 0.0f, 0.01f, 10.0f)]
+        [TestCase(0.707f, 0.707f, 1.23f, 7.07f)]
+        [TestCase(0.01f, 0.707f, 1.23f, 0.1f)]
+        [TestCase(0.0f, 0.707f, 1.11f, 0f)]
+        [TestCase(-0.01f, 0.707f, 3.21f, -0.1f)]
+        [TestCase(-0.707f, 0.707f, 0.01f, -7.07f)]
+        [TestCase(-1.0f, 0.0f, 1.23f, -10.0f)]
+        public void WhenSettingMovementAndRigidBodyHasZeroVelocityOnX_WhenFixedUpdate_ThenRigidBodyHasVelocityOnX(
+            float xValue, float yValue, float originalVelocityY, float expectedVelocityX)
+        {
+            _rigidBody2D.velocity = new Vector2(0, originalVelocityY);
+
+            _sut.SetMovement(new Vector2(xValue, yValue));
+
+            _sut.FixedUpdate();
+
+            Assert.AreEqual(expectedVelocityX, _rigidBody2D.velocity.x, 0.001);
+            Assert.AreEqual(originalVelocityY, _rigidBody2D.velocity.y, 0.001);
+        }
+
+        [Test]
+        public void WhenStillFallingAndTouchingWall_ThenStateIsUnchanged()
+        {
+            var touchingDirections = new TouchingDirectionsStub
+            {
+                IsGrounded = false,
+                IsOnWall = true,
+            };
+            _sut.NotifyTouchingDirections(touchingDirections);
+            _sut.FixedUpdate();
+
+            AssertInitialStateConditions();
+        }
+
+        [Test]
+        public void WhenStillFallingAndNoLongerTouchingWall_ThenCurrentStateIsAirialStateAndActiveChildStateIsFallingState()
+        {
+            var touchingDirections = new TouchingDirectionsStub
+            {
+                IsGrounded = false,
+                IsOnWall = false,
+            };
+            _sut.NotifyTouchingDirections(touchingDirections);
+            _sut.FixedUpdate();
+
+            Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
+            Assert.IsInstanceOf<FallingState>(_sut.ActiveChildState);
+        }
+
+        [Test]
+        public void WhenHittingGroundWithNoMovementInput_ThenCurrentStateIsGroundedStateAndActiveChildStateIsIdleState()
+        {
+            _sut.SetMovement(Vector2.zero);
+            var touchingDirections = new TouchingDirectionsStub
+            {
+                IsGrounded = true,
+                IsOnWall = true,
+            };
+            _sut.NotifyTouchingDirections(touchingDirections);
+            _sut.FixedUpdate();
+
+            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
+            Assert.IsInstanceOf<IdleState>(_sut.ActiveChildState);
+        }
+
+        [Test]
+        [TestCase(-0.01f)]
+        [TestCase(-0.49f)]
+        public void WhenHittingGroundWithNonSignificantDownwardMovementInput_ThenCurrentStateIsGroundedStateAndActiveChildStateIsIdleState(
+            float yValue)
+        {
+            _sut.SetMovement(new Vector2(0, yValue));
+            var touchingDirections = new TouchingDirectionsStub
+            {
+                IsGrounded = true,
+                IsOnWall = true,
+            };
+            _sut.NotifyTouchingDirections(touchingDirections);
+            _sut.FixedUpdate();
+
+            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
+            Assert.IsInstanceOf<IdleState>(_sut.ActiveChildState);
+        }
+
+        [Test]
+        public void WhenHittingGroundWithNonZeroLateralMovementInput_ThenCurrentStateIsGroundedStateAndActiveChildStateIsIdleState()
+        {
+            _sut.SetMovement(Vector2.right);
+            var touchingDirections = new TouchingDirectionsStub
+            {
+                IsGrounded = true,
+                IsOnWall = true,
+            };
+            _sut.NotifyTouchingDirections(touchingDirections);
+            _sut.FixedUpdate();
+
+            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
+            Assert.IsInstanceOf<GroundMovementState>(_sut.ActiveChildState);
+        }
+
+        [Test]
+        public void WhenHittingGroundWithSignificantDownMovementAndWithInsignificantLateralMovement_ThenCurrentStateIsGroundedStateAndActiveChildStateIsCrouchIdleState(
+            [Values(0f, 0.1f, -0.1f)] float xValue,
+            [Values(-0.5f, -.8f)] float yValue)
+        {
+            _sut.SetMovement(new Vector2(xValue, yValue));
+
+            var touchingDirections = new TouchingDirectionsStub
+            {
+                IsGrounded = true,
+                IsOnWall = true,
+            };
+            _sut.NotifyTouchingDirections(touchingDirections);
+            _sut.FixedUpdate();
+
+            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
+            Assert.IsInstanceOf<CrouchIdleState>(_sut.ActiveChildState);
+        }
+
+        [Test]
+        public void WhenHittingGroundWithSignificantDownMovementAndSignificantLateralMovement_ThenCurrentStateIsGroundedStateAndActiveChildStateIsCrouchMovementState(
+            [Values(0.11f, 0.707f, -0.11f, -0.707f)] float xValue,
+            [Values(-0.5f, -.707f)] float yValue)
+        {
+            _sut.SetMovement(new Vector2(xValue, yValue));
+
+            var touchingDirections = new TouchingDirectionsStub
+            {
+                IsGrounded = true,
+                IsOnWall = true,
+            };
+            _sut.NotifyTouchingDirections(touchingDirections);
+            _sut.FixedUpdate();
+
+            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
+            Assert.IsInstanceOf<CrouchMovementState>(_sut.ActiveChildState);
+        }
+
+        [Test]
+        public void WhenJump_ThenStateIsUnchanged()
+        {
+            _sut.Jump();
+
+            AssertInitialStateConditions();
+        }
+
+        [Test]
+        [TestCase(0f)]
+        [TestCase(0.09999f)]
+        public void WhenJumpButtonPressedMidairAndLandsWithJumpBufferActive_ThenCurrentStateIsAirialStateAndActiveChildStateIsJumpState(
+            float secondsPassedSinceJumpButtonPressed)
+        {
+            _timeMock.DeltaTime = 1f;
+            _sut.Update(); // Pass time beyond Coyote Time
+            SimulateJumpInputProcessing();
+            AssertInitialStateConditions();
+
+            _timeMock.DeltaTime = secondsPassedSinceJumpButtonPressed;
+            _sut.Update();
+            AssertInitialStateConditions();
+
+            var touchingDirections = new TouchingDirectionsStub
+            {
+                IsOnWall = true,
+                IsGrounded = true,
+            };
+            _sut.NotifyTouchingDirections(touchingDirections);
+
+            Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
+            Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
+        }
+
+        [Test]
+        [TestCase(1f)]
+        [TestCase(float.MaxValue)]
+        public void WhenJumpButtonPressedMidairAndLandsWithJumpBufferInactive_ThenCurrentStateIsGroundedAndActiveChildStateIsGroundMovementState(
+            float secondsPassedSinceJumpButtonPressed)
+        {
+            _timeMock.DeltaTime = 1f;
+            _sut.Update(); // Pass time beyond Coyote Time
+            SimulateJumpInputProcessing();
+            AssertInitialStateConditions();
+
+            _timeMock.DeltaTime = secondsPassedSinceJumpButtonPressed;
+            _sut.Update();
+            AssertInitialStateConditions();
+
+            var touchingDirections = new TouchingDirectionsStub
+            {
+                IsOnWall = true,
+                IsGrounded = true,
+            };
+            _sut.NotifyTouchingDirections(touchingDirections);
+
+            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
+            Assert.IsInstanceOf<GroundMovementState>(_sut.ActiveChildState); // GroundedMovementState, as we're still inputting movement
+        }
+    }
+
+    // TODO: In game, when Mike lands on the ground, TouchingDirections 'touching wall' and even 'touching ceiling', which is incorrect.
+    // TODO: In game, when Mike falls and touching the wall, TouchingDirections 'touched ground' and 'touching ceiling', which is incorrect.
     // TODO: Implement WallJump state and transitions and effects
 }

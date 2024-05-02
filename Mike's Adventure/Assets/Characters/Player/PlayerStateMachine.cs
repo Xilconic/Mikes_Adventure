@@ -80,12 +80,11 @@ namespace Assets.Characters.Player
                 {
                     CurrentState.SetMovement(_movementInput);
                 }
-                
             }
 
-            if (CurrentState is GroundedState groundState)
+            if (CurrentState is SuperState superState)
             {
-                groundState.NotifyTouchingDirections(touchingDirections);
+                superState.NotifyTouchingDirections(touchingDirections);
             }
         }
 

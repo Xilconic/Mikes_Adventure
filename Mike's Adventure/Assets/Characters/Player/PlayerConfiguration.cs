@@ -23,6 +23,11 @@ public class PlayerConfiguration : MonoBehaviour
     [Tooltip("Determines the jump strength")]
     public float JumpImpulse = 10f;
 
+    [Tooltip("Wall Sliding gravity scale")]
+    public float WallSlideGavityScaling = 0.5f;
+    [Tooltip("Determines the maximum Wall-Sliding speed")]
+    public float MaxWallSlideSpeed = -3f;
+
     [Tooltip("Jumping gravity scale")]
     public float JumpingGravityScale = 1f;
 
@@ -39,9 +44,6 @@ public class PlayerConfiguration : MonoBehaviour
     [Tooltip("Jump input buffer after leaving ground, in seconds")]
     public float CoyoteTimeBuffer = 0.1f;
 
-    [Tooltip("Determines the maximum Wall-Slide velocity")]
-    public float MaxWallSlideVelocity = -3f;
-
     private void Awake()
     {
         Debug.Assert(MaxRunSpeed > 0, "'MaxRunSpeed' must be greater than 0!");
@@ -51,10 +53,11 @@ public class PlayerConfiguration : MonoBehaviour
         Debug.Assert(JumpImpulse > 0, "'JumpImpulse' must be greater than 0!");
         Debug.Assert(JumpingGravityScale > 0, "'JumpingGravityScale' must be greater than 0!");
         Debug.Assert(FallingGravityScale > 0, "'FallingGravityScale' must be greater than 0!");
+        Debug.Assert(WallSlideGavityScaling > 0, "'WallSlideGavityScaling' must be less than or equal to 0!");
         Debug.Assert(JumpBuffer >= 0, "'JumpBuffer' must be greater than or equal to 0!");
         Debug.Assert(MaxCrouchWalkSpeed > 0, "'MaxChrouchWalkSpeed' must be greater than 0!");
         Debug.Assert(-1f <= CrouchInputZone && CrouchInputZone <= 0.0f, "'CrouchInputZone' must be in range [-1.0, 0.0]!");
         Debug.Assert(CrouchLateralInputDeadZone >= 0, "'CrouchLateralInputDeadZone' must be greater than 0!");
-        Debug.Assert(MaxWallSlideVelocity <= 0, "'MaxWallSlideVelocity' must be less than or equal to 0!");
+        Debug.Assert(MaxWallSlideSpeed < 0, "'MaxWallSlideSpeed' must be less than 0!");
     }
 }

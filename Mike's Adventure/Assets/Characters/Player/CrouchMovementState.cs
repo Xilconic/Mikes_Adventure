@@ -26,7 +26,7 @@ namespace Assets.Characters.Player
 
         public IState ActiveChildState { get; }
 
-        public bool CanJump => true; // TODO: Determines from TouchingDirections.OnCeiling
+        public bool CanJump => true;
 
         public void OnEnter()
         {

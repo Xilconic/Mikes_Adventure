@@ -47,7 +47,14 @@ namespace Assets.Characters.Player
             base.FixedUpdate();
             if (_rigidbody.velocity.y <= 0)
             {
-                ChangeCurrentState(new FallingState(_rigidbody, _animator, _configuration));
+                if(_touchingDirections.IsOnWall)
+                {
+                    ChangeCurrentState(new WallSlideState(_rigidbody, _animator, _configuration));
+                }
+                else
+                {
+                    ChangeCurrentState(new FallingState(_rigidbody, _animator, _configuration));
+                }
             }
         }
     }

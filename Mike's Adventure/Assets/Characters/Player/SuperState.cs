@@ -13,6 +13,7 @@ namespace Assets.Characters.Player
     public abstract class SuperState : IState
     {
         private Vector2 _movementInput;
+        protected ITouchingDirections _touchingDirections;
 
         public SuperState(IState initialState)
         {
@@ -43,6 +44,15 @@ namespace Assets.Characters.Player
         public virtual void FixedUpdate()
         {
             CurrentState.FixedUpdate();
+        }
+
+        public virtual void NotifyTouchingDirections(ITouchingDirections touchingDirections)
+        {
+            _touchingDirections = touchingDirections;
+            if(CurrentState is SuperState state)
+            {
+                state.NotifyTouchingDirections(touchingDirections);
+            }
         }
 
         protected void ChangeCurrentState(IState newState)

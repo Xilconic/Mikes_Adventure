@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 618693469184148768}
   - component: {fileID: 3266260841678380136}
   - component: {fileID: 9037610888840973399}
+  - component: {fileID: 4207312178601194614}
   m_Layer: 7
   m_Name: Player_Mike
   m_TagString: Player
@@ -297,19 +298,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _movementInput: {x: 0, y: 0}
-  _normalizedMovementInput: {x: 0, y: 0}
-  MaxRunSpeed: 10
-  MaxWalkSpeed: 5
-  LateralInputDeadZone: 0.1
-  MaxChrouchWalkSpeed: 3
-  CrouchInputZone: -0.5
-  CrouchLateralInputDeadZone: 0.1
-  JumpImpulse: 10
-  JumpingGravityScale: 1
-  FallingGravityScale: 3
-  JumpBuffer: 0.1
-  CoyoteTimeBuffer: 0.1
-  <PlayerState>k__BackingField: 0
 --- !u!114 &3266260841678380136
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -438,3 +426,28 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!114 &4207312178601194614
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6959799432808149664}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 58bc31a6a1feab943b853c9f3a432981, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MaxRunSpeed: 10
+  MaxWalkSpeed: 5
+  LateralInputDeadZone: 0.1
+  MaxCrouchWalkSpeed: 3
+  CrouchInputZone: -0.5
+  CrouchLateralInputDeadZone: 0.1
+  JumpImpulse: 10
+  WallSlideGavityScaling: 0.5
+  MaxWallSlideSpeed: -3
+  JumpingGravityScale: 1
+  FallingGravityScale: 2
+  JumpBuffer: 0.1
+  CoyoteTimeBuffer: 0.1

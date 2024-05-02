@@ -13,7 +13,6 @@ namespace Assets.Characters.Player
         private readonly Rigidbody2D _rigidbody;
         private readonly IAnimator _animator;
         private readonly PlayerConfiguration _configuration;
-        private ITouchingDirections _touchingDirections;
 
         private bool IsTouchingCeiling
         {
@@ -56,9 +55,9 @@ namespace Assets.Characters.Player
             base.SetMovement(movementInput);
         }
 
-        public void NotifyTouchingDirections(ITouchingDirections touchingDirections)
+        public override void NotifyTouchingDirections(ITouchingDirections touchingDirections)
         {
-            _touchingDirections = touchingDirections;
+            base.NotifyTouchingDirections(touchingDirections);
             if (CurrentState is CrouchedState crouchedState)
             {
                 crouchedState.NotifyTouchingDirections(touchingDirections);

@@ -13,7 +13,6 @@ namespace Assets.Characters.Player
         private readonly Rigidbody2D _rigidBody;
         private readonly IAnimator _animator;
         private readonly PlayerConfiguration _configuration;
-        private ITouchingDirections _touchingDirections;
 
         public CrouchedState(Rigidbody2D rigidbody, IAnimator animator, PlayerConfiguration configuration) : 
             base(new CrouchIdleState(rigidbody, animator))
@@ -23,9 +22,9 @@ namespace Assets.Characters.Player
             _configuration = configuration;
         }
 
-        private bool IsTouchingCeiling => (!_touchingDirections?.IsOnCeiling) ?? true;
+        private bool IsNotTouchingCeiling => (!_touchingDirections?.IsOnCeiling) ?? true;
 
-        public override bool CanJump => base.CanJump && IsTouchingCeiling;
+        public override bool CanJump => base.CanJump && IsNotTouchingCeiling;
 
         public override void SetMovement(Vector2 movementInput)
         {
@@ -39,11 +38,6 @@ namespace Assets.Characters.Player
             }
 
             base.SetMovement(movementInput);
-        }
-
-        public void NotifyTouchingDirections(ITouchingDirections touchingDirections)
-        {
-            _touchingDirections = touchingDirections;
         }
     }
 }
