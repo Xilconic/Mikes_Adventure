@@ -1598,7 +1598,5 @@ public class PlayerStateMachineTests
         }
     }
 
-    // TODO: In game, when Mike lands on the ground, TouchingDirections 'touching wall' and even 'touching ceiling', which is incorrect.
-    // TODO: In game, when Mike falls and touching the wall, TouchingDirections 'touched ground' and 'touching ceiling', which is incorrect.
     // TODO: Implement WallJump state and transitions and effects
 }
