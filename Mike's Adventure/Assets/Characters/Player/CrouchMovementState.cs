@@ -13,13 +13,16 @@ namespace Assets.Characters.Player
         private readonly Rigidbody2D _rigidbody;
         private readonly IAnimator _animator;
         private readonly PlayerConfiguration _configuration;
+        private readonly IPlayerFacing _playerFacing;
+
         private Vector2 _movementInput;
 
-        public CrouchMovementState(Rigidbody2D rigidbody, IAnimator animator, PlayerConfiguration configuration)
+        public CrouchMovementState(Rigidbody2D rigidbody, IAnimator animator, PlayerConfiguration configuration, IPlayerFacing playerFacing)
         {
             _rigidbody = rigidbody;
             _animator = animator;
             _configuration = configuration;
+            _playerFacing = playerFacing;
 
             ActiveChildState = this;
         }
@@ -46,6 +49,15 @@ namespace Assets.Characters.Player
         public void SetMovement(Vector2 movementInput)
         {
             _movementInput = movementInput;
+
+            if (_movementInput.x > 0 && !_playerFacing.IsFacingRight)
+            {
+                _playerFacing.IsFacingRight = true;
+            }
+            else if (_movementInput.x < 0 && _playerFacing.IsFacingRight)
+            {
+                _playerFacing.IsFacingRight = false;
+            }
         }
     }
 }

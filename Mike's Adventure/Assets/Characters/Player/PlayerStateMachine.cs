@@ -10,10 +10,12 @@ namespace Assets.Characters.Player
 {
     public class PlayerStateMachine
     {
+        // TODO: Change _rigidBody manipulation to be forced based, instead of velocity override. Current control system does not keep player momentum well!
         private readonly Rigidbody2D _rigidbody;
         private readonly IAnimator _animator;
         private readonly PlayerConfiguration _configuration;
-        
+        private readonly IPlayerFacing _playerFacing;
+
         private Vector2 _movementInput;
         private float _jumpBufferCooldown = 0;
         private float _coyoteTimeCooldown = 0;
@@ -21,12 +23,15 @@ namespace Assets.Characters.Player
         public PlayerStateMachine(
             Rigidbody2D rigidbody,
             IAnimator animator,
-            PlayerConfiguration configuration)
+            PlayerConfiguration configuration,
+            IPlayerFacing playerFacing)
         {
             _rigidbody = rigidbody;
             _animator = animator;
             _configuration = configuration;
-            CurrentState = new GroundedState(_rigidbody, _animator, _configuration);
+            _playerFacing = playerFacing;
+
+            CurrentState = new GroundedState(_rigidbody, _animator, _configuration, _playerFacing);
         }
 
         public ITime Time { get; set; } = new UnityTime();
@@ -38,8 +43,16 @@ namespace Assets.Characters.Player
         {
             if (CurrentState.CanJump)
             {
-                var state = AirialState.CreateJumpingState(_rigidbody, _animator, _configuration);
-                ChangeCurrentState(state);
+                if(CurrentState is AirialState airialState)
+                {
+                    ChangeCurrentState(airialState.CreateJumpingState());
+                }
+                else
+                {
+                    var state = AirialState.CreateJumpingState(_rigidbody, _animator, _configuration, _playerFacing);
+                    ChangeCurrentState(state);
+                }
+                
                 _coyoteTimeCooldown = 0;
             }
             else if (CurrentState is AirialState airialState &&
@@ -66,11 +79,11 @@ namespace Assets.Characters.Player
         {
             if (!touchingDirections.IsGrounded && CurrentState is GroundedState)
             {
-                ChangeCurrentState(AirialState.CreateDefaultState(_rigidbody, _animator, _configuration));
+                ChangeCurrentState(AirialState.CreateDefaultState(_rigidbody, _animator, _configuration, _playerFacing));
             }
             else if (touchingDirections.IsGrounded && CurrentState is AirialState && ActiveChildState is not JumpState)
             {
-                var groundedState = new GroundedState(_rigidbody, _animator, _configuration);
+                var groundedState = new GroundedState(_rigidbody, _animator, _configuration, _playerFacing);
                 ChangeCurrentState(groundedState);
                 if (_jumpBufferCooldown > 0)
                 {
@@ -91,6 +104,7 @@ namespace Assets.Characters.Player
         public void SetMovement(Vector2 movementInput)
         {
             _movementInput = movementInput;
+
             CurrentState.SetMovement(movementInput);
         }
 

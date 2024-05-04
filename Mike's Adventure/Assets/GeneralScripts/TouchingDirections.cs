@@ -28,6 +28,9 @@ public class TouchingDirections : MonoBehaviour, ITouchingDirections
     [field: SerializeField, ReadOnlyField, Tooltip("Indicates if the character is touching a wall or not.")]
     public bool IsOnWall { get; private set; }
 
+    [field: SerializeField, ReadOnlyField, Tooltip("Indicates what wall the character is touching.")]
+    public WallDirection WallDirection { get; private set; }
+
     [field: SerializeField, ReadOnlyField, Tooltip("Indicates if the character is obstructed above them or not.")]
     public bool IsOnCeiling { get; private set; }
 
@@ -45,6 +48,14 @@ public class TouchingDirections : MonoBehaviour, ITouchingDirections
     {
         IsGrounded = _touchingCollider.Cast(Vector2.down, CastFilter, _groundHits, GroundDistance) > 0;
         IsOnWall = _touchingCollider.Cast(WallCheckDirection, CastFilter, _wallHits, WallDistance) > 0;
+        if (IsOnWall)
+        {
+            WallDirection = gameObject.transform.localScale.x > 0 ? WallDirection.Right : WallDirection.Left;
+        }
+        else
+        {
+            WallDirection = WallDirection.None;
+        }
         IsOnCeiling = _touchingCollider.Cast(Vector2.up, CastFilter, _ceilingHits, CeilingDistance) > 0;
     }
 }
@@ -54,4 +65,12 @@ public interface ITouchingDirections
     public bool IsGrounded { get; }
     public bool IsOnWall { get; }
     public bool IsOnCeiling { get; }
+    public WallDirection WallDirection { get; }
+}
+
+public enum WallDirection
+{
+    None,
+    Right,
+    Left
 }

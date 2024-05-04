@@ -11,11 +11,14 @@ using UnityEngine.PlayerLoop;
 
 public class PlayerStateMachineTests
 {
+    protected const float ExpectedJumpGravityScale = 1f;
+
     protected GameObject _gameObject;
     protected Rigidbody2D _rigidBody2D;
     protected PlayerStateMachine _sut;
     protected TimeMock _timeMock;
     protected AnimatorMock _animator;
+    protected PlayerFacingMock _playerFacing;
 
     // TODO: When player crouhced under obstacle and touches ceiling: Jump should not be possible (can still happen inconsistently :( )
 
@@ -27,7 +30,8 @@ public class PlayerStateMachineTests
         var configuration = _gameObject.AddComponent<PlayerConfiguration>();
         _timeMock = new TimeMock();
         _animator = new AnimatorMock();
-        _sut = new PlayerStateMachine(_rigidBody2D, _animator, configuration)
+        _playerFacing = new PlayerFacingMock();
+        _sut = new PlayerStateMachine(_rigidBody2D, _animator, configuration, _playerFacing)
         {
             Time = _timeMock,
         };
@@ -77,6 +81,12 @@ public class PlayerStateMachineTests
         {
 
             Assert.IsInstanceOf<IdleState>(_sut.ActiveChildState);
+        }
+
+        [Test]
+        public void ThenFacingIsRight()
+        {
+            Assert.IsTrue(_playerFacing.IsFacingRight);
         }
     }
 
@@ -240,6 +250,16 @@ public class PlayerStateMachineTests
         {
             Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
             Assert.IsInstanceOf<GroundMovementState>(_sut.ActiveChildState);
+            
+            Assert.IsFalse(_playerFacing.IsFacingRight, "Player is walking to the left in the setup");
+        }
+
+        [Test]
+        public void WhenSettingMovementInputTowardsTheRight_ThenPlayerFacingChangesToTheRight()
+        {
+            _sut.SetMovement(Vector2.right);
+
+            Assert.IsTrue(_playerFacing.IsFacingRight);
         }
 
         [Test]
@@ -452,7 +472,20 @@ public class PlayerStateMachineTests
         }
 
         [Test]
-        public void WhenSettingSignificantDownMovementAndWithInsignificantLateralMovementAndRigidBodyHasVelocityOnX_WhenFixedUpdate_ThenRigidBodyHasVelocityZeroOnX(
+        [TestCase(0.1f, -.8f, true)]
+        [TestCase(-0.1f, -.8f, false)]
+        public void WhenSettingSignificantDownMovementAndWithInsignificantLateralMovementAndRigidBodyHasVelocityOnX_ThenPlayerFacingUpdated(
+            float xValue,
+            float yValue,
+            bool expectedIsFacingRight)
+        {
+            _sut.SetMovement(new Vector2(xValue, yValue));
+
+            Assert.AreEqual(expectedIsFacingRight, _playerFacing.IsFacingRight);
+        }
+
+        [Test]
+        public void WhenSettingSignificantDownMovementAndWithInsignificantLateralMovementAndRigidBodyHasVelocityOnX_WhenFixedUpdate_ThenRigidBodyHasVelocityZeroOnXAndUnchangedState(
             [Values(0f, 0.1f, -0.1f)] float xValue,
             [Values(-0.5f, -.8f)] float yValue)
         {
@@ -465,6 +498,7 @@ public class PlayerStateMachineTests
 
             Assert.AreEqual(0, _rigidBody2D.velocity.x);
             Assert.AreEqual(originalVelocityY, _rigidBody2D.velocity.y);
+            AssertInitialStateConditions();
         }
 
         [Test]
@@ -616,6 +650,18 @@ public class PlayerStateMachineTests
             _sut.Update();
 
             Assert.AreEqual(AnimationClipNames.CrouchWalk, _animator.CurrentPlayingAnimationClip);
+        }
+
+        [TestCase(0.707f, -.707f, true)]
+        [TestCase(-0.707f, -.707f, false)]
+        public void WhenSettingSignificantDownMovementAndWithSignificantLateralMovementAndRigidBodyHasVelocityOnX_ThenPlayerFacingUpdated(
+            float xValue,
+            float yValue,
+            bool expectedIsFacingRight)
+        {
+            _sut.SetMovement(new Vector2(xValue, yValue));
+
+            Assert.AreEqual(expectedIsFacingRight, _playerFacing.IsFacingRight);
         }
 
         [Test]
@@ -844,6 +890,18 @@ public class PlayerStateMachineTests
         public void ThenRigidBodyHasGravityScaleTwo()
         {
             Assert.AreEqual(2f, _rigidBody2D.gravityScale);
+        }
+
+        [Test]
+        [TestCase(1f, true)]
+        [TestCase(-1f, false)]
+        public void WhenSettingMovement_ThenPlayerFacingUpdated(
+            float xValue,
+            bool expectedIsFacingRight)
+        {
+            _sut.SetMovement(new Vector2(xValue, 0));
+
+            Assert.AreEqual(expectedIsFacingRight, _playerFacing.IsFacingRight);
         }
 
         [Test]
@@ -1086,7 +1144,7 @@ public class PlayerStateMachineTests
             var touchingDirections = new TouchingDirectionsStub
             {
                 IsGrounded = false, // Need to still be airborne
-                IsOnWall = true,
+                WallDirection = WallDirection.Left,
             };
             _sut.NotifyTouchingDirections(touchingDirections);
             _sut.FixedUpdate();
@@ -1103,7 +1161,7 @@ public class PlayerStateMachineTests
             var touchingDirections = new TouchingDirectionsStub
             {
                 IsGrounded = false, // Need to still be airborne
-                IsOnWall = true,
+                WallDirection = WallDirection.Left,
             };
             _sut.NotifyTouchingDirections(touchingDirections);
             _sut.FixedUpdate();
@@ -1145,7 +1203,19 @@ public class PlayerStateMachineTests
         [Test]
         public void ThenRigidBodyHasGravityScalingOne()
         {
-            Assert.AreEqual(1f, _rigidBody2D.gravityScale);
+            Assert.AreEqual(ExpectedJumpGravityScale, _rigidBody2D.gravityScale);
+        }
+
+        [Test]
+        [TestCase(1f, true)]
+        [TestCase(-1f, false)]
+        public void WhenSettingMovement_ThenPlayerFacingUpdated(
+            float xValue,
+            bool expectedIsFacingRight)
+        {
+            _sut.SetMovement(new Vector2(xValue, 0));
+
+            Assert.AreEqual(expectedIsFacingRight, _playerFacing.IsFacingRight);
         }
 
         [Test]
@@ -1324,7 +1394,7 @@ public class PlayerStateMachineTests
             var touchingDirections = new TouchingDirectionsStub
             {
                 IsGrounded = false, // Need to still be airborne
-                IsOnWall = true,
+                WallDirection = WallDirection.Left,
             };
             _sut.NotifyTouchingDirections(touchingDirections);
             _sut.FixedUpdate();
@@ -1340,7 +1410,7 @@ public class PlayerStateMachineTests
             var touchingDirections = new TouchingDirectionsStub
             {
                 IsGrounded = false, // Need to still be airborne
-                IsOnWall = true,
+                WallDirection = WallDirection.Right,
             };
             _sut.NotifyTouchingDirections(touchingDirections);
             _sut.FixedUpdate();
@@ -1369,7 +1439,7 @@ public class PlayerStateMachineTests
             var touchingDirections = new TouchingDirectionsStub
             {
                 IsGrounded = false, // Need to still be airborne
-                IsOnWall = true,
+                WallDirection = WallDirection.Right,
             };
             _sut.NotifyTouchingDirections(touchingDirections);
             _sut.FixedUpdate();
@@ -1399,6 +1469,12 @@ public class PlayerStateMachineTests
         }
 
         [Test]
+        public void ThenPlayerFacingUpdated()
+        {
+            Assert.IsTrue(_playerFacing.IsFacingRight, "Is sliding wall on right side of player");
+        }
+
+        [Test]
         [TestCase(1.0f, 0.0f, 0.01f, 10.0f)]
         [TestCase(0.707f, 0.707f, 1.23f, 7.07f)]
         [TestCase(0.01f, 0.707f, 1.23f, 0.1f)]
@@ -1425,7 +1501,7 @@ public class PlayerStateMachineTests
             var touchingDirections = new TouchingDirectionsStub
             {
                 IsGrounded = false,
-                IsOnWall = true,
+                WallDirection = WallDirection.Right,
             };
             _sut.NotifyTouchingDirections(touchingDirections);
             _sut.FixedUpdate();
@@ -1439,7 +1515,7 @@ public class PlayerStateMachineTests
             var touchingDirections = new TouchingDirectionsStub
             {
                 IsGrounded = false,
-                IsOnWall = false,
+                WallDirection = WallDirection.None,
             };
             _sut.NotifyTouchingDirections(touchingDirections);
             _sut.FixedUpdate();
@@ -1455,7 +1531,7 @@ public class PlayerStateMachineTests
             var touchingDirections = new TouchingDirectionsStub
             {
                 IsGrounded = true,
-                IsOnWall = true,
+                WallDirection = WallDirection.Right,
             };
             _sut.NotifyTouchingDirections(touchingDirections);
             _sut.FixedUpdate();
@@ -1474,7 +1550,7 @@ public class PlayerStateMachineTests
             var touchingDirections = new TouchingDirectionsStub
             {
                 IsGrounded = true,
-                IsOnWall = true,
+                WallDirection = WallDirection.Right
             };
             _sut.NotifyTouchingDirections(touchingDirections);
             _sut.FixedUpdate();
@@ -1490,7 +1566,7 @@ public class PlayerStateMachineTests
             var touchingDirections = new TouchingDirectionsStub
             {
                 IsGrounded = true,
-                IsOnWall = true,
+                WallDirection = WallDirection.Right,
             };
             _sut.NotifyTouchingDirections(touchingDirections);
             _sut.FixedUpdate();
@@ -1509,7 +1585,7 @@ public class PlayerStateMachineTests
             var touchingDirections = new TouchingDirectionsStub
             {
                 IsGrounded = true,
-                IsOnWall = true,
+                WallDirection = WallDirection.Right,
             };
             _sut.NotifyTouchingDirections(touchingDirections);
             _sut.FixedUpdate();
@@ -1528,7 +1604,7 @@ public class PlayerStateMachineTests
             var touchingDirections = new TouchingDirectionsStub
             {
                 IsGrounded = true,
-                IsOnWall = true,
+                WallDirection = WallDirection.Right,
             };
             _sut.NotifyTouchingDirections(touchingDirections);
             _sut.FixedUpdate();
@@ -1538,65 +1614,168 @@ public class PlayerStateMachineTests
         }
 
         [Test]
-        public void WhenJump_ThenStateIsUnchanged()
+        public void WhenJump_ThenCurrentStateIsAirialStateAndActiveChildStateIsWallJumpState()
         {
             _sut.Jump();
-
-            AssertInitialStateConditions();
-        }
-
-        [Test]
-        [TestCase(0f)]
-        [TestCase(0.09999f)]
-        public void WhenJumpButtonPressedMidairAndLandsWithJumpBufferActive_ThenCurrentStateIsAirialStateAndActiveChildStateIsJumpState(
-            float secondsPassedSinceJumpButtonPressed)
-        {
-            _timeMock.DeltaTime = 1f;
-            _sut.Update(); // Pass time beyond Coyote Time
-            SimulateJumpInputProcessing();
-            AssertInitialStateConditions();
-
-            _timeMock.DeltaTime = secondsPassedSinceJumpButtonPressed;
-            _sut.Update();
-            AssertInitialStateConditions();
-
-            var touchingDirections = new TouchingDirectionsStub
+            _sut.NotifyTouchingDirections(new TouchingDirectionsStub
             {
-                IsOnWall = true,
-                IsGrounded = true,
-            };
-            _sut.NotifyTouchingDirections(touchingDirections);
+                IsGrounded = false,
+                WallDirection = WallDirection.Right,
+            });
+            _sut.FixedUpdate();
 
             Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
-            Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
-        }
-
-        [Test]
-        [TestCase(1f)]
-        [TestCase(float.MaxValue)]
-        public void WhenJumpButtonPressedMidairAndLandsWithJumpBufferInactive_ThenCurrentStateIsGroundedAndActiveChildStateIsGroundMovementState(
-            float secondsPassedSinceJumpButtonPressed)
-        {
-            _timeMock.DeltaTime = 1f;
-            _sut.Update(); // Pass time beyond Coyote Time
-            SimulateJumpInputProcessing();
-            AssertInitialStateConditions();
-
-            _timeMock.DeltaTime = secondsPassedSinceJumpButtonPressed;
-            _sut.Update();
-            AssertInitialStateConditions();
-
-            var touchingDirections = new TouchingDirectionsStub
-            {
-                IsOnWall = true,
-                IsGrounded = true,
-            };
-            _sut.NotifyTouchingDirections(touchingDirections);
-
-            Assert.IsInstanceOf<GroundedState>(_sut.CurrentState);
-            Assert.IsInstanceOf<GroundMovementState>(_sut.ActiveChildState); // GroundedMovementState, as we're still inputting movement
+            Assert.IsInstanceOf<WallJumpState>(_sut.ActiveChildState);
         }
     }
 
-    // TODO: Implement WallJump state and transitions and effects
+    public class GivenActiveChildStateIsWallJumpStateFromLeftWall : PlayerStateMachineTests
+    {
+        protected override void AdditionalSetUp()
+        {
+            base.AdditionalSetUp();
+
+            // Jump...
+            SimulateJumpInputProcessing(true);
+            Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
+
+            // ... then go into FallingState...
+            _rigidBody2D.velocity = new Vector2(0, -4f);
+            _sut.FixedUpdate();
+            Assert.IsInstanceOf<FallingState>(_sut.ActiveChildState);
+
+            // ... while simulating player movement into a wall to reach WallSlideState
+            _sut.SetMovement(Vector2.left);
+            var touchingDirections = new TouchingDirectionsStub
+            {
+                IsGrounded = false, // Need to still be airborne
+                WallDirection = WallDirection.Left,
+            };
+            _sut.NotifyTouchingDirections(touchingDirections);
+            _sut.FixedUpdate();
+            Assert.IsInstanceOf<WallSlideState>(_sut.ActiveChildState);
+
+            // ... and finally Jump:
+            _sut.Jump();
+            _sut.NotifyTouchingDirections(new TouchingDirectionsStub
+            {
+                IsGrounded = false,
+                WallDirection = WallDirection.Left,
+            });
+            _sut.FixedUpdate(); // FixedUpdate() required due to physics interactions!
+        }
+
+        protected override void AssertInitialStateConditions()
+        {
+            Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
+            Assert.IsInstanceOf<WallJumpState>(_sut.ActiveChildState);
+        }
+
+        [Test]
+        public void WhenUpdate_ThenAnimationIsSetToMikeJump()
+        {
+            _sut.Update();
+
+            Assert.AreEqual(AnimationClipNames.Jump, _animator.CurrentPlayingAnimationClip);
+        }
+
+        [Test]
+        public void WhenFixedUpdate_ThenRigidBodyHasGravityScalingOne()
+        {
+            _sut.FixedUpdate();
+
+            Assert.AreEqual(ExpectedJumpGravityScale, _rigidBody2D.gravityScale);
+            // Jump strength of 10, at 45 degrees towards the right:
+            Assert.AreEqual(7.07f, _rigidBody2D.velocity.y, 0.0001);
+            Assert.AreEqual(7.07f, _rigidBody2D.velocity.x, 0.0001);
+        }
+
+        [Test]
+        public void ThenPlayerFacingIsRight()
+        {
+            Assert.IsTrue(_playerFacing.IsFacingRight);
+        }
+
+        //TODO: Write regression tests:
+        //TODO: Transition into falling
+        //TODO: Cannot jump again while in WallJumpState
+        //TODO: WallJumping into another wall does
+        //TODO: While WallJumping, touch another wall an jump again: do nothing (Only WallSlide currently allows wall jumping)
+        //TODO: Player movement input is ignored while in this state.
+    }
+
+    public class GivenActiveChildStateIsWallJumpStateFromRightWall : PlayerStateMachineTests
+    {
+        protected override void AdditionalSetUp()
+        {
+            base.AdditionalSetUp();
+
+            // Jump...
+            SimulateJumpInputProcessing(true);
+            Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
+
+            // ... then go into FallingState...
+            _rigidBody2D.velocity = new Vector2(0, -4f);
+            _sut.FixedUpdate();
+            Assert.IsInstanceOf<FallingState>(_sut.ActiveChildState);
+
+            // ... while simulating player movement into a wall to reach WallSlideState
+            _sut.SetMovement(Vector2.right);
+            var touchingDirections = new TouchingDirectionsStub
+            {
+                IsGrounded = false, // Need to still be airborne
+                WallDirection = WallDirection.Right,
+            };
+            _sut.NotifyTouchingDirections(touchingDirections);
+            _sut.FixedUpdate();
+            Assert.IsInstanceOf<WallSlideState>(_sut.ActiveChildState);
+
+            // ... and finally Jump:
+            _sut.Jump();
+            _sut.NotifyTouchingDirections(new TouchingDirectionsStub
+            {
+                IsGrounded = false,
+                WallDirection = WallDirection.Right,
+            });
+            _sut.FixedUpdate(); // FixedUpdate() required due to physics interactions!
+        }
+
+        protected override void AssertInitialStateConditions()
+        {
+            Assert.IsInstanceOf<AirialState>(_sut.CurrentState);
+            Assert.IsInstanceOf<WallJumpState>(_sut.ActiveChildState);
+        }
+
+        [Test]
+        public void WhenUpdate_ThenAnimationIsSetToMikeJump()
+        {
+            _sut.Update();
+
+            Assert.AreEqual(AnimationClipNames.Jump, _animator.CurrentPlayingAnimationClip);
+        }
+
+        [Test]
+        public void WhenFixedUpdate_ThenRigidBodyHasGravityScalingOne()
+        {
+            _sut.FixedUpdate();
+
+            Assert.AreEqual(ExpectedJumpGravityScale, _rigidBody2D.gravityScale);
+            // Jump strength of 10, at 45 degrees towards the left:
+            Assert.AreEqual(7.07f, _rigidBody2D.velocity.y, 0.0001);
+            Assert.AreEqual(-7.07f, _rigidBody2D.velocity.x, 0.0001);
+        }
+
+        [Test]
+        public void ThenPlayerFacingIsLeft()
+        {
+            Assert.IsFalse(_playerFacing.IsFacingRight);
+        }
+
+        //TODO: Write regression tests:
+        //TODO: Transition into falling
+        //TODO: Cannot jump again while in WallJumpState
+        //TODO: WallJumping into another wall does
+        //TODO: While WallJumping, touch another wall an jump again: do nothing (Only WallSlide currently allows wall jumping)
+        //TODO: Player movement input is ignored while in this state.
+    }
 }

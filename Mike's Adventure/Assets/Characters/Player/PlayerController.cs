@@ -11,7 +11,7 @@ using UnityEngine.Playables;
 [RequireComponent(typeof(Animator))]
 [RequireComponent(typeof(TouchingDirections))]
 [RequireComponent(typeof(PlayerConfiguration))]
-public class PlayerController : MonoBehaviour
+public class PlayerController : MonoBehaviour, IPlayerFacing
 {
     private Rigidbody2D _rb;
     private Animator _animator;
@@ -23,7 +23,7 @@ public class PlayerController : MonoBehaviour
     private PlayerStateMachine _playerStateMachine;
 
     private bool _isFacingRight = true;
-    private bool IsFacingRight
+    public bool IsFacingRight
     {
         get => _isFacingRight;
         set
@@ -44,7 +44,7 @@ public class PlayerController : MonoBehaviour
         _touchingDirections = GetComponent<TouchingDirections>();
         _configuration = GetComponent<PlayerConfiguration>();
 
-        _playerStateMachine = new PlayerStateMachine(_rb, new UnityAnimator(_animator), _configuration);
+        _playerStateMachine = new PlayerStateMachine(_rb, new UnityAnimator(_animator), _configuration, this);
     }
 
     private void Update()
@@ -62,15 +62,6 @@ public class PlayerController : MonoBehaviour
     public void OnMove(InputAction.CallbackContext context)
     {
         _movementInput = context.ReadValue<Vector2>();
-
-        if (_movementInput.x > 0 && !IsFacingRight)
-        {
-            IsFacingRight = true;
-        }
-        else if (_movementInput.x < 0 && IsFacingRight)
-        {
-            IsFacingRight = false;
-        }
         _playerStateMachine.SetMovement(_movementInput);
     }
 

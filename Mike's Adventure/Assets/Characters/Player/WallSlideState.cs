@@ -13,28 +13,30 @@ namespace Assets.Characters.Player
         private readonly Rigidbody2D _rigidbody;
         private readonly IAnimator _animator;
         private readonly PlayerConfiguration _configuration;
+        private readonly IPlayerFacing _playerFacing;
 
         private Vector2 _movementInput;
-        private bool setWallSlideGavityScaling = false;
+        private bool _setWallSlideGavityScaling = false;
 
-        public WallSlideState(Rigidbody2D rigidBody, IAnimator animator, PlayerConfiguration configuration)
+        public WallSlideState(Rigidbody2D rigidBody, IAnimator animator, PlayerConfiguration configuration, IPlayerFacing playerFacing)
         {
             _rigidbody = rigidBody;
             _animator = animator;
             _configuration = configuration;
+            _playerFacing = playerFacing;
             ActiveChildState = this;
         }
 
         public IState ActiveChildState { get; }
 
-        public bool CanJump => false;
+        public bool CanJump => true;
 
         public void FixedUpdate()
         {
-            if (setWallSlideGavityScaling)
+            if (_setWallSlideGavityScaling)
             {
                 _rigidbody.gravityScale = _configuration.WallSlideGavityScaling;
-                setWallSlideGavityScaling = false;
+                _setWallSlideGavityScaling = false;
             }
 
             var velocityX = _movementInput.x * _configuration.MaxRunSpeed;
@@ -51,12 +53,21 @@ namespace Assets.Characters.Player
 
         public void OnEnter()
         {
-            setWallSlideGavityScaling = true;
+            _setWallSlideGavityScaling = true;
         }
 
         public void SetMovement(Vector2 movementInput)
         {
             _movementInput = movementInput;
+
+            if (_movementInput.x > 0 && !_playerFacing.IsFacingRight)
+            {
+                _playerFacing.IsFacingRight = true;
+            }
+            else if (_movementInput.x < 0 && _playerFacing.IsFacingRight)
+            {
+                _playerFacing.IsFacingRight = false;
+            }
         }
 
         public void Update()

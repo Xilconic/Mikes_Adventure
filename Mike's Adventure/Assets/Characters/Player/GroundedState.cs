@@ -13,6 +13,7 @@ namespace Assets.Characters.Player
         private readonly Rigidbody2D _rigidbody;
         private readonly IAnimator _animator;
         private readonly PlayerConfiguration _configuration;
+        private readonly IPlayerFacing _playerFacing;
 
         private bool IsTouchingCeiling
         {
@@ -32,12 +33,14 @@ namespace Assets.Characters.Player
         public GroundedState(
             Rigidbody2D rigidbody,
             IAnimator animator,
-            PlayerConfiguration configuration) : 
-            base(new StandingState(rigidbody, animator, configuration))
+            PlayerConfiguration configuration,
+            IPlayerFacing playerFacing) : 
+            base(new StandingState(rigidbody, animator, configuration, playerFacing))
         {
             _rigidbody = rigidbody;
             _animator = animator;
             _configuration = configuration;
+            _playerFacing = playerFacing;
         }
 
         public override void SetMovement(Vector2 movementInput)
@@ -45,11 +48,11 @@ namespace Assets.Characters.Player
             if (movementInput.y <= _configuration.CrouchInputZone ||
                 (CurrentState is CrouchedState && IsTouchingCeiling))
             {
-                ChangeCurrentState(new CrouchedState(_rigidbody, _animator, _configuration));
+                ChangeCurrentState(new CrouchedState(_rigidbody, _animator, _configuration, _playerFacing));
             }
             else
             {
-                ChangeCurrentState(new StandingState(_rigidbody, _animator, _configuration));
+                ChangeCurrentState(new StandingState(_rigidbody, _animator, _configuration, _playerFacing));
             }
 
             base.SetMovement(movementInput);
