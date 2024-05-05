@@ -2913,6 +2913,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4207312178601194614, guid: b8423ada0fc9c6b48836be4e97ccbe95, type: 3}
+      propertyPath: JumpImpulse
+      value: 23
+      objectReference: {fileID: 0}
+    - target: {fileID: 4207312178601194614, guid: b8423ada0fc9c6b48836be4e97ccbe95, type: 3}
+      propertyPath: MaxRunSpeed
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 4207312178601194614, guid: b8423ada0fc9c6b48836be4e97ccbe95, type: 3}
+      propertyPath: FallingGravityScale
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 4207312178601194614, guid: b8423ada0fc9c6b48836be4e97ccbe95, type: 3}
+      propertyPath: JumpingGravityScale
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 6959799432808149664, guid: b8423ada0fc9c6b48836be4e97ccbe95, type: 3}
       propertyPath: m_Name
       value: Player_Mike
