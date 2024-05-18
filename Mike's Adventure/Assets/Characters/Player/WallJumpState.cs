@@ -41,6 +41,7 @@ namespace Assets.Characters.Player
                 _rigidbody.gravityScale = _configuration.JumpingGravityScale;
                 _setJumpingGravityScale = false;
             }
+
             if (_shouldPerformJumpImpulse)
             {
                 float direction = 0f;
@@ -55,9 +56,21 @@ namespace Assets.Characters.Player
                         direction = -1f;
                         break;
                 }
-                _rigidbody.velocity = new Vector2(direction * _configuration.JumpImpulse * 0.707f, _configuration.JumpImpulse * 0.707f);
+
+                if (_configuration.AccelerationBasedMovement)
+                {
+                    var jumpImpulseVector = _configuration.JumpImpulse * new Vector2(direction * 0.707f, 0.707f);
+                    jumpImpulseVector.y -= _rigidbody.velocity.y; // Cancel out any vertical momentum on this jump
+                    _rigidbody.AddForce(jumpImpulseVector, ForceMode2D.Impulse);
+                }
+                else
+                {
+                    _rigidbody.velocity = new Vector2(direction * _configuration.JumpImpulse * 0.707f, _configuration.JumpImpulse * 0.707f);
+                    
+                }
                 _shouldPerformJumpImpulse = false;
             }
+            
         }
 
         public void OnEnter()

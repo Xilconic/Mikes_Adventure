@@ -44,6 +44,13 @@ public class PlayerConfiguration : MonoBehaviour
     [Tooltip("Jump input buffer after leaving ground, in seconds")]
     public float CoyoteTimeBuffer = 0.1f;
 
+    [Tooltip("Determines if player movement is based on accelerations (true) or velocity overrides (false)")]
+    public bool AccelerationBasedMovement = false;
+    [Tooltip("Influence the rate of acceleration of Mike. 1.0 reaches max velocities instantly")]
+    public float AccelerationRate = 0.1f;
+    [Tooltip("Influence the rate of deacceleration of Mike. 1.0 reaches 0 velocity instantaly")]
+    public float DeaccelerationRate = 0.9f;
+
     private void Awake()
     {
         Debug.Assert(MaxRunSpeed > 0, "'MaxRunSpeed' must be greater than 0!");

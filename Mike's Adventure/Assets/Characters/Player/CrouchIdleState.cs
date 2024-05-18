@@ -12,12 +12,14 @@ namespace Assets.Characters.Player
     {
         private readonly Rigidbody2D _rigidbody;
         private readonly IAnimator _animator;
+        private readonly PlayerConfiguration _configuration;
         private readonly IPlayerFacing _playerFacing;
 
-        public CrouchIdleState(Rigidbody2D rigidbody, IAnimator animator, IPlayerFacing playerFacing)
+        public CrouchIdleState(Rigidbody2D rigidbody, IAnimator animator, PlayerConfiguration configuration, IPlayerFacing playerFacing)
         {
             _rigidbody = rigidbody;
             _animator = animator;
+            _configuration = configuration;
             _playerFacing = playerFacing;
 
             ActiveChildState = this;
@@ -39,7 +41,25 @@ namespace Assets.Characters.Player
 
         public void FixedUpdate()
         {
-            _rigidbody.AdjustVelocityX(0);
+            if (_configuration.AccelerationBasedMovement)
+            {
+                // Player is actively counter-acting current momentum
+                float targetVelocity = 0;
+                float accelerationRate = _configuration.DeaccelerationRate;
+                // Formula:
+                // v_new = v_current + a * delta_t
+                //     Substituting Sum(Forces) = m * a):
+                // v_new = v_current + (Sum(Forces) / m) * delta_t
+                // targetVelocity = v_current + (Sum(Forces) * delta_t) / m
+                // ((targetVelocity - v_current) * m) * delta_t = Sum(Forces)
+                float velocityDifference = targetVelocity - _rigidbody.velocity.x;
+                var movementForce = (velocityDifference * _rigidbody.mass) / Time.fixedDeltaTime;
+                _rigidbody.AddForce(movementForce * accelerationRate * Vector2.right, ForceMode2D.Force);
+            }
+            else
+            {
+                _rigidbody.AdjustVelocityX(0);
+            }
         }
 
         public void SetMovement(Vector2 movementInput)

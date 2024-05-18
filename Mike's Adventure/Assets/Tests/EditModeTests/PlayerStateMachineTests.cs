@@ -28,6 +28,7 @@ public class PlayerStateMachineTests
         _gameObject = new GameObject();
         _rigidBody2D = _gameObject.AddComponent<Rigidbody2D>();
         var configuration = _gameObject.AddComponent<PlayerConfiguration>();
+        configuration.AccelerationBasedMovement = true;
         _timeMock = new TimeMock();
         _animator = new AnimatorMock();
         _playerFacing = new PlayerFacingMock();
@@ -100,17 +101,19 @@ public class PlayerStateMachineTests
             Assert.AreEqual(AnimationClipNames.Idle, _animator.CurrentPlayingAnimationClip);
         }
 
-        [Test]
-        [TestCase(1f)]
-        [TestCase(-1f)]
-        public void AndRigidBodyHasVelocityOnX_WhenFixedUpdate_ThenRigidBodyHasVelocityZeroOnX(
-            float someVelocity)
+        [Test]// Deaccelerating force: (((xValue * 0 - initialVelocityX) * 1) / 0.02) * .9 = -45 * initialVelocityX
+        [TestCase(1f, -45f)]
+        [TestCase(-2f, 90f)]
+        public void AndRigidBodyHasVelocityOnX_WhenFixedUpdate_ThenRigidBodyHasVelocityXUnchanged(
+            float initialVelocityX, float expectedForceX)
         {
-            _rigidBody2D.velocity = new Vector2(someVelocity, 0);
+            _rigidBody2D.velocity = new Vector2(initialVelocityX, 0);
 
             _sut.FixedUpdate();
 
-            Assert.AreEqual(0, _rigidBody2D.velocity.x);
+            Assert.AreEqual(expectedForceX, _rigidBody2D.totalForce.x, 0.01);
+            Assert.AreEqual(0, _rigidBody2D.totalForce.y);
+            Assert.AreEqual(initialVelocityX, _rigidBody2D.velocity.x, 0.01, "Because FixedUpdate does not directly set _rigidBody.velocity");
         }
 
         [Test]
@@ -262,47 +265,47 @@ public class PlayerStateMachineTests
             Assert.IsTrue(_playerFacing.IsFacingRight);
         }
 
-        [Test]
-        [TestCase(0.5f)]
-        [TestCase(0.01f)]
-        [TestCase(-0.01f)]
-        [TestCase(-0.5f)]
+        [Test] // Target Velocity = movementVelocityX * MaxRunSpeed = movementVelocityX * 10
+        [TestCase(5f)] // movementVelocityX = 0.5 => Target Velocity = 5
+        [TestCase(0.1f)] // movementVelocityX = 0.01 => Target Velocity = 0.1
+        [TestCase(-0.1f)] // movementVelocityX = -0.01 => Target Velocity = -0.1
+        [TestCase(-5f)] // movementVelocityX = -0.5 => Target Velocity = -5
         public void AndMovementSpeedIsLessThanOrEqualsToWalkingTheshold_WhenUpdate_ThenAnimationIsSetToMikeWalk(
-            float movementInputX)
+            float movementVelocityX)
         {
-            _sut.SetMovement(new Vector2(movementInputX, 0f));
-            _sut.FixedUpdate();
+            // Note: SetMovement adjusts forces. As this test does not simulate physics, we're simulating the effects of stick movement
+            _rigidBody2D.velocity = new Vector2(movementVelocityX, 0f);
 
             _sut.Update();
 
             Assert.AreEqual(AnimationClipNames.Walk, _animator.CurrentPlayingAnimationClip);
         }
 
-        [Test]
-        [TestCase(1.0f)]
-        [TestCase(0.51f)]
-        [TestCase(-0.51f)]
-        [TestCase(-1.0f)]
+        [Test] // Target Velocity = movementVelocityX * MaxRunSpeed = movementVelocityX * 10
+        [TestCase(10f)] // movementVelocityX = 1.0 => Target Velocity = 10
+        [TestCase(5.1f)] // movementVelocityX = 0.51 => Target Velocity = 5.1
+        [TestCase(-5.1f)] // movementVelocityX = -0.51 => Target Velocity = -5.1
+        [TestCase(-10f)] // movementVelocityX = -1.0 => Target Velocity = -10
         public void AndMovementSpeedIsGreaterThanWalkingTheshold_WhenUpdate_ThenAnimationIsSetToMikeJog(
-            float movementInputX)
+            float movementVelocityX)
         {
-            _sut.SetMovement(new Vector2(movementInputX, 0f));
-            _sut.FixedUpdate();
+            // Note: SetMovement adjusts forces. As this test does not simulate physics, we're simulating the effects of stick movement
+            _rigidBody2D.velocity = new Vector2(movementVelocityX, 0f);
 
             _sut.Update();
 
             Assert.AreEqual(AnimationClipNames.Jog, _animator.CurrentPlayingAnimationClip);
         }
 
-        [Test]
-        [TestCase(1f, 10.0f)]
-        [TestCase(0.1f, 1.0f)]
-        [TestCase(0.01f, 0.1f)]
-        [TestCase(-0.01f, -0.1f)]
-        [TestCase(-0.1f, -1.0f)]
-        [TestCase(-1f, -10.0f)]
-        public void AndRigidBodyHasZeroVelocityOnXAndHorizontalMovementSet_WhenFixedUpdate_ThenRigidBodyHasVelocityOnX(
-            float inputX, float expectedVelocityX)
+        [Test] // Accelerating force: (((xValue *10 - 0) * 1) / 0.02) * .1 = 50 * xValue
+        [TestCase(1f, 50.0f)]
+        [TestCase(0.1f, 5.0f)]
+        [TestCase(0.01f, 0.5f)]
+        [TestCase(-0.01f, -0.5f)]
+        [TestCase(-0.1f, -5.0f)]
+        [TestCase(-1f, -50.0f)]
+        public void AndRigidBodyHasZeroVelocityOnXAndHorizontalMovementSet_WhenFixedUpdate_ThenRigidBodyHorizontalForcesApplied(
+            float inputX, float expectedForceX)
         {
             const float originalVelocityY = 0;
             _rigidBody2D.velocity = new Vector2(0, originalVelocityY);
@@ -311,7 +314,10 @@ public class PlayerStateMachineTests
 
             _sut.FixedUpdate();
 
-            Assert.AreEqual(expectedVelocityX, _rigidBody2D.velocity.x, 0.001f);
+
+            Assert.AreEqual(expectedForceX, _rigidBody2D.totalForce.x, 0.01);
+            Assert.AreEqual(0, _rigidBody2D.totalForce.y, 0.01);
+            Assert.AreEqual(0, _rigidBody2D.velocity.x, 0.001, "Because FixedUpdate does not directly set _rigidBody.velocity");
             Assert.AreEqual(originalVelocityY, _rigidBody2D.velocity.y, 0.001f);
         }
 
@@ -426,23 +432,24 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
         }
 
-        [Test]
-        [TestCase(1f, 10.0f)]
-        [TestCase(0.1f, 1.0f)]
-        [TestCase(0.01f, 0.1f)]
-        [TestCase(-0.01f, -0.1f)]
-        [TestCase(-0.1f, -1.0f)]
-        [TestCase(-1f, -10.0f)]
-        public void AndRigidBodyHasNonZeroVelocityOnXDueToPlayerInput_WhenJumpAndFixedUpdate_ThenRigidBodyHasVelocityOnX(
-            float xValue, float expectedVelocityX)
+        [Test] // Accelerating force: (((xValue *10 - 0) * 1) / 0.02) * .1 = 50 * xValue
+        [TestCase(1f, 50.0f)] 
+        [TestCase(0.1f, 5.0f)]
+        [TestCase(0.01f, 0.5f)]
+        [TestCase(-0.01f, -0.5f)]
+        [TestCase(-0.1f, -5.0f)]
+        [TestCase(-1f, -50.0f)]
+        public void AndRigidBodyHasNonZeroVelocityOnXDueToPlayerInput_WhenJumpAndFixedUpdate_ThenRigidBodyHasHorizontalForcesApplied(
+            float xValue, float expectedForceX)
         {
             _rigidBody2D.velocity = Vector2.zero;
             _sut.SetMovement(new Vector2(xValue, 0));
-            _sut.FixedUpdate();
 
             SimulateJumpInputProcessing();
 
-            Assert.AreEqual(expectedVelocityX, _rigidBody2D.velocity.x, 0.001);
+            Assert.AreEqual(expectedForceX, _rigidBody2D.totalForce.x, 0.01);
+            Assert.AreEqual(0, _rigidBody2D.totalForce.y, 0.01);
+            Assert.AreEqual(0, _rigidBody2D.velocity.x, 0.001, "Because FixedUpdate does not directly set _rigidBody.velocity");
         }
     }
 
@@ -496,7 +503,9 @@ public class PlayerStateMachineTests
 
             _sut.FixedUpdate();
 
-            Assert.AreEqual(0, _rigidBody2D.velocity.x);
+            Assert.AreEqual(-45.0f, _rigidBody2D.totalForce.x, 0.01f, "Because Idle state perform a counter-acting force of ((-1 * 1) / 0.02) * 0.9 = -45.0; Target velocity is 0, so delta_v = 0-1 = -1. _rigidBody.mass = 1. Time.fixedDeltaTime = 0.02. _configuration.DeaccelerationRate = 0.9.");
+            Assert.AreEqual(0, _rigidBody2D.totalForce.y);
+            Assert.AreEqual(1f, _rigidBody2D.velocity.x, "Because the FixedUpdate itself does not change the velocity");
             Assert.AreEqual(originalVelocityY, _rigidBody2D.velocity.y);
             AssertInitialStateConditions();
         }
@@ -664,13 +673,13 @@ public class PlayerStateMachineTests
             Assert.AreEqual(expectedIsFacingRight, _playerFacing.IsFacingRight);
         }
 
-        [Test]
-        [TestCase(0.11f, -0.5f, 0.33f)]
-        [TestCase(0.707f, -.707f, 2.121f)]
-        [TestCase(-0.11f, -.707f, -0.33f)]
-        [TestCase(-.707f, -.707f, -2.121f)]
-        public void WhenSettingSignificantDownMovementAndWithSignificantLateralMovementAndRigidBodyHasZeroVelocityOnX_WhenFixedUpdate_ThenRigidBodyHasVelocityOnX(
-            float xValue, float yValue, float expectedVelocityX)
+        [Test] // Accelerating force: (((xValue * 3 - 0) * 1) / 0.02) * .1 = 15 * xValue
+        [TestCase(0.11f, -0.5f, 1.65f)]
+        [TestCase(0.707f, -.707f, 10.60f)]
+        [TestCase(-0.11f, -.707f, -1.65f)]
+        [TestCase(-.707f, -.707f, -10.60f)]
+        public void WhenSettingSignificantDownMovementAndWithSignificantLateralMovementAndRigidBodyHasZeroVelocityOnX_WhenFixedUpdate_ThenRigidBodyHasHorizontalForcesApplied(
+            float xValue, float yValue, float expectedForceX)
         {
             const float originalVelocityY = 0;
             _rigidBody2D.velocity = new Vector2(0, originalVelocityY);
@@ -679,7 +688,9 @@ public class PlayerStateMachineTests
 
             _sut.FixedUpdate();
 
-            Assert.AreEqual(expectedVelocityX, _rigidBody2D.velocity.x, 0.001);
+            Assert.AreEqual(expectedForceX, _rigidBody2D.totalForce.x, 0.01);
+            Assert.AreEqual(0, _rigidBody2D.totalForce.y, 0.01);
+            Assert.AreEqual(0, _rigidBody2D.velocity.x, 0.001, "Because FixedUpdate does not directly set _rigidBody.velocity");
             Assert.AreEqual(originalVelocityY, _rigidBody2D.velocity.y);
         }
 
@@ -826,21 +837,23 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<JumpState>(_sut.ActiveChildState);
         }
 
-        [Test] // Note: Higher airial mobility, so movement input is translated into higher speeds!
-        [TestCase(0.11f, -0.5f, 1.10f)]
-        [TestCase(0.707f, -.707f, 7.07f)]
-        [TestCase(-0.11f, -.707f, -1.10f)]
-        [TestCase(-.707f, -.707f, -7.07f)]
-        public void AndRigidBodyHasNonZeroVelocityOnXDueToPlayerInput_WhenJumpAndFixedUpdate_ThenRigidBodyHasVelocityOnX(
-            float xValue, float yValue, float expectedVelocityX)
+        [Test] // Note: Higher airial mobility, so movement input is translated into higher speeds! Accelerating force: (((xValue * 10 - 0) * 1) / 0.02) * .1 = 50 * xValue
+        [TestCase(0.11f, -0.5f, 5.50f)]
+        [TestCase(0.707f, -.707f, 35.35f)]
+        [TestCase(-0.11f, -.707f, -5.50f)]
+        [TestCase(-.707f, -.707f, -35.35f)]
+        public void AndRigidBodyHasNonZeroVelocityOnXDueToPlayerInput_WhenJumpAndFixedUpdate_ThenRigidBodyHasHorizontalForcesApplied(
+            float xValue, float yValue, float expectedForceX)
         {
             _rigidBody2D.velocity = Vector2.zero;
             _sut.SetMovement(new Vector2(xValue, yValue));
-            _sut.FixedUpdate();
 
             SimulateJumpInputProcessing();
 
-            Assert.AreEqual(expectedVelocityX, _rigidBody2D.velocity.x, 0.001);
+            Vector2 totalForce = _rigidBody2D.totalForce;
+            Assert.AreEqual(expectedForceX, totalForce.x, 0.01f, "Because FixedUpdate applies force to _rigidBody");
+            Assert.AreEqual(0, totalForce.y);
+            Assert.AreEqual(0, _rigidBody2D.velocity.x, 0.001, "Because FixedUpdate does not set velocity");
         }
 
         [Test]
@@ -904,16 +917,16 @@ public class PlayerStateMachineTests
             Assert.AreEqual(expectedIsFacingRight, _playerFacing.IsFacingRight);
         }
 
-        [Test]
-        [TestCase(1.0f, 0.0f, 0.01f, 10.0f)]
-        [TestCase(0.707f, 0.707f, 1.23f, 7.07f)]
-        [TestCase(0.01f, 0.707f, 1.23f, 0.1f)]
+        [Test] // Accelerating force: (((xValue * 10 - 0) * 1) / 0.02) * .1 = 50 * xValue
+        [TestCase(1.0f, 0.0f, 0.01f, 50.0f)]
+        [TestCase(0.707f, 0.707f, 1.23f, 35.35f)]
+        [TestCase(0.01f, 0.707f, 1.23f, 0.50f)]
         [TestCase(0.0f, 0.707f, 1.11f, 0f)]
-        [TestCase(-0.01f, 0.707f, 3.21f, -0.1f)]
-        [TestCase(-0.707f, 0.707f, 0.01f, -7.07f)]
-        [TestCase(-1.0f, 0.0f, 1.23f, -10.0f)]
-        public void WhenSettingMovementAndRigidBodyHasZeroVelocityOnX_WhenFixedUpdate_ThenRigidBodyHasVelocityOnX(
-            float xValue, float yValue, float originalVelocityY, float expectedVelocityX)
+        [TestCase(-0.01f, 0.707f, 3.21f, -0.5f)]
+        [TestCase(-0.707f, 0.707f, 0.01f, -35.35f)]
+        [TestCase(-1.0f, 0.0f, 1.23f, -50.0f)]
+        public void WhenSettingMovementAndRigidBodyHasZeroVelocityOnX_WhenFixedUpdate_ThenRigidBodyHasHorizontalForcesApplied(
+            float xValue, float yValue, float originalVelocityY, float expectedForceX)
         {
             _rigidBody2D.velocity = new Vector2(0, originalVelocityY);
 
@@ -921,8 +934,10 @@ public class PlayerStateMachineTests
 
             _sut.FixedUpdate();
 
-            Assert.AreEqual(expectedVelocityX, _rigidBody2D.velocity.x, 0.001);
-            Assert.AreEqual(originalVelocityY, _rigidBody2D.velocity.y, 0.001);
+            Assert.AreEqual(expectedForceX, _rigidBody2D.totalForce.x, 0.01);
+            Assert.AreEqual(0, _rigidBody2D.totalForce.y, 0.01);
+            Assert.AreEqual(0, _rigidBody2D.velocity.x, 0.001, "Because FixedUpdate does not directly set _rigidBody.velocity");
+            Assert.AreEqual(originalVelocityY, _rigidBody2D.velocity.y);
         }
 
         [Test]
@@ -1279,16 +1294,16 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<FallingState>(_sut.ActiveChildState);
         }
 
-        [Test]
-        [TestCase(1.0f, 0.0f, 10.0f)]
-        [TestCase(0.707f, 0.707f, 7.07f)]
-        [TestCase(0.01f, 0.707f, 0.1f)]
+        [Test] // Accelerating force: (((xValue * 10 - 0) * 1) / 0.02) * .1 = 50 * xValue
+        [TestCase(1.0f, 0.0f, 50.0f)]
+        [TestCase(0.707f, 0.707f, 35.35f)]
+        [TestCase(0.01f, 0.707f, 0.5f)]
         [TestCase(0.0f, 0.707f, 0f)]
-        [TestCase(-0.01f, 0.707f, -0.1f)]
-        [TestCase(-0.707f, 0.707f, -7.07f)]
-        [TestCase(-1.0f, 0.0f, -10.0f)]
-        public void AndSettingMovementAndRigidBodyHasZeroVelocityOnX_WhenFixedUpdate_ThenRigidBodyHasVelocityOnX(
-            float xValue, float yValue, float expectedVelocityX)
+        [TestCase(-0.01f, 0.707f, -0.5f)]
+        [TestCase(-0.707f, 0.707f, -35.35f)]
+        [TestCase(-1.0f, 0.0f, -50.0f)]
+        public void AndSettingMovementAndRigidBodyHasZeroVelocityOnX_WhenFixedUpdate_ThenRigidBodyHasHorizontalForcesApplied(
+            float xValue, float yValue, float expectedForceX)
         {
             float originalVelocityY = _rigidBody2D.velocity.y;
             _rigidBody2D.velocity = new Vector2(0, originalVelocityY);
@@ -1297,7 +1312,9 @@ public class PlayerStateMachineTests
 
             _sut.FixedUpdate();
 
-            Assert.AreEqual(expectedVelocityX, _rigidBody2D.velocity.x, 0.001);
+            Assert.AreEqual(expectedForceX, _rigidBody2D.totalForce.x, 0.01);
+            Assert.AreEqual(0, _rigidBody2D.totalForce.y, 0.01);
+            Assert.AreEqual(0, _rigidBody2D.velocity.x, 0.001, "Because FixedUpdate does not directly set _rigidBody.velocity");
             Assert.AreEqual(originalVelocityY, _rigidBody2D.velocity.y, 0.001);
         }
 
@@ -1465,7 +1482,7 @@ public class PlayerStateMachineTests
             _sut.FixedUpdate();
 
             Assert.AreEqual(0.5f, _rigidBody2D.gravityScale);
-            Assert.AreEqual(-3.0f, _rigidBody2D.velocity.y);
+            Assert.AreEqual(-3.0f, _rigidBody2D.velocity.y, "Because PlayerConfiguration has a max wall slide speed of -3");
         }
 
         [Test]
@@ -1474,25 +1491,28 @@ public class PlayerStateMachineTests
             Assert.IsTrue(_playerFacing.IsFacingRight, "Is sliding wall on right side of player");
         }
 
-        [Test]
-        [TestCase(1.0f, 0.0f, 0.01f, 10.0f)]
-        [TestCase(0.707f, 0.707f, 1.23f, 7.07f)]
-        [TestCase(0.01f, 0.707f, 1.23f, 0.1f)]
+        [Test] // Accelerating force: (((xValue * 10 - 0) * 1) / 0.02) * .1 = 50 * xValue
+        [TestCase(1.0f, 0.0f, 0.01f, 50.0f)]
+        [TestCase(0.707f, 0.707f, 1.23f, 35.35f)]
+        [TestCase(0.01f, 0.707f, 1.23f, 0.5f)]
         [TestCase(0.0f, 0.707f, 1.11f, 0f)]
-        [TestCase(-0.01f, 0.707f, 3.21f, -0.1f)]
-        [TestCase(-0.707f, 0.707f, 0.01f, -7.07f)]
-        [TestCase(-1.0f, 0.0f, 1.23f, -10.0f)]
-        public void WhenSettingMovementAndRigidBodyHasZeroVelocityOnX_WhenFixedUpdate_ThenRigidBodyHasVelocityOnX(
-            float xValue, float yValue, float originalVelocityY, float expectedVelocityX)
+        [TestCase(-0.01f, 0.707f, 3.21f, -0.5f)]
+        [TestCase(-0.707f, 0.707f, 0.01f, -35.35f)]
+        [TestCase(-1.0f, 0.0f, 1.23f, -50.0f)]
+        public void WhenSettingMovementAndRigidBodyHasZeroVelocityOnX_WhenFixedUpdate_ThenRigidBodyHasHorizontalForcesApplied(
+            float xValue, float yValue, float originalVelocityY, float expectedForceX)
         {
             _rigidBody2D.velocity = new Vector2(0, originalVelocityY);
 
             _sut.SetMovement(new Vector2(xValue, yValue));
 
+            Vector2 originalAppliedForces = _rigidBody2D.totalForce; // Test Setup causes initial forces to be applied; We're only interested in the additive forces from the next FixedUpdate:
             _sut.FixedUpdate();
 
-            Assert.AreEqual(expectedVelocityX, _rigidBody2D.velocity.x, 0.001);
-            Assert.AreEqual(originalVelocityY, _rigidBody2D.velocity.y, 0.001);
+            Assert.AreEqual(expectedForceX, _rigidBody2D.totalForce.x - originalAppliedForces.x, 0.01);
+            Assert.AreEqual(0, _rigidBody2D.totalForce.y - originalAppliedForces.y, 0.01);
+            Assert.AreEqual(0, _rigidBody2D.velocity.x, 0.001, "Because FixedUpdate does not directly set _rigidBody.velocity");
+            Assert.AreEqual(originalVelocityY, _rigidBody2D.velocity.y);
         }
 
         [Test]
@@ -1631,6 +1651,8 @@ public class PlayerStateMachineTests
 
     public class GivenActiveChildStateIsWallJumpStateFromLeftWall : PlayerStateMachineTests
     {
+        private Vector2 _preWallJumpForces;
+
         protected override void AdditionalSetUp()
         {
             base.AdditionalSetUp();
@@ -1654,6 +1676,10 @@ public class PlayerStateMachineTests
             _sut.NotifyTouchingDirections(touchingDirections);
             _sut.FixedUpdate();
             Assert.IsInstanceOf<WallSlideState>(_sut.ActiveChildState);
+            _sut.FixedUpdate(); // Execute 1 flame in WallSlideState.FixedUpdate
+            Assert.AreEqual(-3f, _rigidBody2D.velocity.y, 0.01f);
+
+            _preWallJumpForces = _rigidBody2D.totalForce;
 
             // ... and finally Jump:
             _sut.Jump();
@@ -1680,14 +1706,22 @@ public class PlayerStateMachineTests
         }
 
         [Test]
-        public void WhenFixedUpdate_ThenRigidBodyHasGravityScalingOne()
+        public void WhenFixedUpdate_ThenRigidBodyHasGravityScalingOneAndJumpJumpVelocitySet()
         {
-            _sut.FixedUpdate();
-
             Assert.AreEqual(ExpectedJumpGravityScale, _rigidBody2D.gravityScale);
+        }
+
+        [Test]
+        public void WehnFixedUpdate_ThenRigidBodyHasJumpVelocitiesSet()
+        {
             // Jump strength of 10, at 45 degrees towards the right:
-            Assert.AreEqual(7.07f, _rigidBody2D.velocity.y, 0.0001);
-            Assert.AreEqual(7.07f, _rigidBody2D.velocity.x, 0.0001);
+            // Total Accelerating force: 10 (PlayerConfiguration.JumpImpulse)
+            // Force at 45 degrees to the right for x: 10 * .707 = 7.07
+            // Force at 45 degrees to the right for y: 10 * .707 = 7.07
+            Assert.AreEqual(0, _rigidBody2D.totalForce.x - _preWallJumpForces.x, 0.01, "Because Impulse forces do not affect RigidBody2D.totalForce");
+            Assert.AreEqual(0, _rigidBody2D.totalForce.y - _preWallJumpForces.y, 0.01, "Because Impulse forces do not affect RigidBody2D.totalForce");
+            Assert.AreEqual(7.07f, _rigidBody2D.velocity.x, 0.001, "Because FixedUpdate applied the force as an impulse, causing an immediate adjustment of the velocity");
+            Assert.AreEqual(7.07f, _rigidBody2D.velocity.y, 0.001, "Because FixedUpdate applied the force as an impulse, causing an immediate adjustment of the velicity");
         }
 
         [Test]
@@ -1706,6 +1740,8 @@ public class PlayerStateMachineTests
 
     public class GivenActiveChildStateIsWallJumpStateFromRightWall : PlayerStateMachineTests
     {
+        private Vector2 _preWallJumpForces;
+
         protected override void AdditionalSetUp()
         {
             base.AdditionalSetUp();
@@ -1729,6 +1765,10 @@ public class PlayerStateMachineTests
             _sut.NotifyTouchingDirections(touchingDirections);
             _sut.FixedUpdate();
             Assert.IsInstanceOf<WallSlideState>(_sut.ActiveChildState);
+            _sut.FixedUpdate(); // Execute 1 flame in WallSlideState.FixedUpdate
+            Assert.AreEqual(-3f, _rigidBody2D.velocity.y, 0.01f);
+
+            _preWallJumpForces = _rigidBody2D.totalForce;
 
             // ... and finally Jump:
             _sut.Jump();
@@ -1760,9 +1800,19 @@ public class PlayerStateMachineTests
             _sut.FixedUpdate();
 
             Assert.AreEqual(ExpectedJumpGravityScale, _rigidBody2D.gravityScale);
-            // Jump strength of 10, at 45 degrees towards the left:
-            Assert.AreEqual(7.07f, _rigidBody2D.velocity.y, 0.0001);
-            Assert.AreEqual(-7.07f, _rigidBody2D.velocity.x, 0.0001);
+        }
+
+        [Test]
+        public void WehnFixedUpdate_ThenRigidBodyHasJumpVelocitiesSet()
+        {
+            // Jump strength of 10, at 45 degrees towards the right:
+            // Total Accelerating force: 10 (PlayerConfiguration.JumpImpulse)
+            // Force at 45 degrees to the left for x: 10 * -.707 = -7.07
+            // Force at 45 degrees to the left for y: 10 * .707 = 7.07
+            Assert.AreEqual(0, _rigidBody2D.totalForce.x - _preWallJumpForces.x, 0.01, "Because Impulse forces do not affect RigidBody2D.totalForce");
+            Assert.AreEqual(0, _rigidBody2D.totalForce.y - _preWallJumpForces.y, 0.01, "Because Impulse forces do not affect RigidBody2D.totalForce");
+            Assert.AreEqual(-7.07f, _rigidBody2D.velocity.x, 0.001, "Because FixedUpdate applied the force as an impulse, causing an immediate adjustment of the velocity");
+            Assert.AreEqual(7.07f, _rigidBody2D.velocity.y, 0.001, "Because FixedUpdate applied the force as an impulse, causing an immediate adjustment of the velicity");
         }
 
         [Test]

@@ -16,7 +16,7 @@ namespace Assets.Characters.Player
         private readonly IPlayerFacing _playerFacing;
 
         public CrouchedState(Rigidbody2D rigidbody, IAnimator animator, PlayerConfiguration configuration, IPlayerFacing playerFacing) : 
-            base(new CrouchIdleState(rigidbody, animator, playerFacing))
+            base(new CrouchIdleState(rigidbody, animator, configuration, playerFacing))
         {
             _rigidBody = rigidbody;
             _animator = animator;
@@ -36,7 +36,7 @@ namespace Assets.Characters.Player
             }
             else
             {
-                ChangeCurrentState(new CrouchIdleState(_rigidBody, _animator, _playerFacing));
+                ChangeCurrentState(new CrouchIdleState(_rigidBody, _animator, _configuration, _playerFacing));
             }
 
             base.SetMovement(movementInput);

@@ -20,7 +20,7 @@ namespace Assets.Characters.Player
             IAnimator animator,
             PlayerConfiguration configuration,
             IPlayerFacing playerFacing) : 
-            base(new IdleState(rigidbody, animator))
+            base(new IdleState(rigidbody, animator, configuration))
         {
             _rigidbody = rigidbody;
             _animator = animator;
@@ -36,7 +36,7 @@ namespace Assets.Characters.Player
             }
             else
             {
-                ChangeCurrentState(new IdleState(_rigidbody, _animator));
+                ChangeCurrentState(new IdleState(_rigidbody, _animator, _configuration));
             }
 
             base.SetMovement(movementInput);
