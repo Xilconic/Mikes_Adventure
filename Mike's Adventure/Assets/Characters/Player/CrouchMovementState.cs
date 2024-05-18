@@ -38,7 +38,14 @@ namespace Assets.Characters.Player
 
         public void Update()
         {
-            _animator.Play(AnimationClipNames.CrouchWalk);
+            if(Mathf.Abs(_rigidbody.velocity.x) > _configuration.MaxCrouchWalkSpeed)
+            {
+                _animator.Play(AnimationClipNames.CrouchSlide);
+            }
+            else
+            {
+                _animator.Play(AnimationClipNames.CrouchWalk);
+            }
         }
 
         public void FixedUpdate()

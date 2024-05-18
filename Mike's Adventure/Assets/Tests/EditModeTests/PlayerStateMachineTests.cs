@@ -653,12 +653,30 @@ public class PlayerStateMachineTests
             Assert.IsInstanceOf<CrouchMovementState>(_sut.ActiveChildState);
         }
 
-        [Test]
-        public void WhenUpdate_ThenAnimationIsSetToMikeWalk()
+        [TestCase(3.0f)]
+        [TestCase(0.1f)]
+        [TestCase(-0.1f)]
+        [TestCase(-3.0f)]
+        public void AndVelocityWithinMaxCrouchWalkSpeed_WhenUpdate_ThenAnimationIsSetToMikeCrouchWalk(
+            float velocityX)
         {
+            _rigidBody2D.AdjustVelocityX(velocityX);
             _sut.Update();
 
             Assert.AreEqual(AnimationClipNames.CrouchWalk, _animator.CurrentPlayingAnimationClip);
+        }
+
+        [TestCase(10.0f)]
+        [TestCase(3.1f)]
+        [TestCase(-3.1f)]
+        [TestCase(-10.0f)]
+        public void AndVelocityOverMaxCrouchWalkSpeed_WhenUpdate_ThenAnimationIsSetToMikeCrouchSlide(
+            float velocityX)
+        {
+            _rigidBody2D.AdjustVelocityX(velocityX);
+            _sut.Update();
+
+            Assert.AreEqual(AnimationClipNames.CrouchSlide, _animator.CurrentPlayingAnimationClip);
         }
 
         [TestCase(0.707f, -.707f, true)]

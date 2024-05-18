@@ -7,6 +7,7 @@
     public const string Falling = "mike_falling";
     public const string CrouchIdle = "mike_crouch_idle";
     public const string CrouchWalk = "mike_crouch_walk";
+    public const string CrouchSlide = "mike_crouch_slide";
     public const string WallCling = "mike_wall_cling";
     public const string WallSlide = "mike_wall_slide";
 }
