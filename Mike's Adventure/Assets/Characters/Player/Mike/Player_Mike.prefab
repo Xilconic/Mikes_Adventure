@@ -439,16 +439,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 58bc31a6a1feab943b853c9f3a432981, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MaxRunSpeed: 10
+  MaxRunSpeed: 15
   MaxWalkSpeed: 5
   LateralInputDeadZone: 0.1
   MaxCrouchWalkSpeed: 3
   CrouchInputZone: -0.5
   CrouchLateralInputDeadZone: 0.1
-  JumpImpulse: 10
+  JumpImpulse: 23
   WallSlideGavityScaling: 0.5
   MaxWallSlideSpeed: -3
-  JumpingGravityScale: 1
-  FallingGravityScale: 2
+  JumpingGravityScale: 5
+  FallingGravityScale: 5
   JumpBuffer: 0.1
   CoyoteTimeBuffer: 0.1
+  AccelerationBasedMovement: 1
+  AccelerationRate: 0.1
+  DeaccelerationRate: 0.5
