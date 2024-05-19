@@ -38,6 +38,18 @@ TagManager:
   - 
   - 
   m_SortingLayers:
+  - name: HorizonBackground
+    uniqueID: 241137471
+    locked: 0
+  - name: FarBackground
+    uniqueID: 1583809833
+    locked: 0
+  - name: Background
+    uniqueID: 754134029
+    locked: 0
+  - name: NonCollisionBackground
+    uniqueID: 1641702359
+    locked: 0
   - name: Default
     uniqueID: 0
     locked: 0
